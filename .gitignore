@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+data/store.json
+data/media
+.env
+.env.local
+*.tsbuildinfo

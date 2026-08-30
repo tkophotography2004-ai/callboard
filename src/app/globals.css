@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #09080a;
+  color: #f3ead8;
+}
+
+body {
+  min-height: 100dvh;
+  letter-spacing: 0.01em;
+}
+
+::selection {
+  background: rgba(196, 122, 74, 0.4);
+  color: #fff8ee;
+}
+
+.display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.eyebrow {
+  @apply text-[11px] uppercase tracking-[0.34em] text-copper-400;
+}
+
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(196, 122, 74, 0.7), transparent);
+}
+
+input,
+textarea,
+select {
+  @apply w-full rounded-none border border-white/10 bg-black/40 px-4 py-3 text-paper outline-none transition;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.25rem !important;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 !important;
+  accent-color: #c47a4a;
+}
+
+button,
+a,
+label {
+  touch-action: manipulation;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(196, 122, 74, 0.55);
+  box-shadow: 0 0 0 1px rgba(196, 122, 74, 0.2);
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-[12px] uppercase tracking-[0.22em] transition;
+}
+
+.btn-copper {
+  @apply btn bg-copper-400 text-ink-950 hover:bg-copper-300;
+}
+
+.btn-ghost {
+  @apply btn border border-white/15 text-paper hover:border-copper-400/70 hover:text-copper-200;
+}
+
+.btn-dark {
+  @apply btn bg-white/5 text-paper hover:bg-white/10;
+}
+
+.btn-pass {
+  @apply btn border border-white/15 text-mist hover:border-white/40 hover:text-paper;
+}
+
+.grain::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+}
+
+.hide-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.kenburns {
+  animation: kenburns 18s ease-in-out infinite alternate;
+}
+
+@keyframes kenburns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(-2%, -1%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

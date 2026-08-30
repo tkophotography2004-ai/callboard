@@ -1,0 +1,122 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { formatDuration } from "@/lib/format";
+import { HOOK_SECONDS, type Arena } from "@/lib/rules";
+
+type Props = {
+  coverPath: string;
+  mediaPath: string | null;
+  arena: Arena;
+  durationSeconds: number;
+  hookStartSeconds?: number;
+  autoPlay?: boolean;
+  onPlay?: () => void;
+};
+
+function isVideoPath(src: string | null) {
+  if (!src) return false;
+  return /\.(mp4|webm|mov)(\?|$)/i.test(src);
+}
+
+export default function MediaPlayer({
+  coverPath,
+  mediaPath,
+  arena,
+  durationSeconds,
+  hookStartSeconds = 0,
+  autoPlay,
+  onPlay,
+}: Props) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [t, setT] = useState(0);
+  const video = isVideoPath(mediaPath);
+  const cap = Math.min(durationSeconds || HOOK_SECONDS, arena === "screen" ? 120 : HOOK_SECONDS);
+
+  useEffect(() => {
+    if (!autoPlay) return;
+    void start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaPath, autoPlay]);
+
+  async function start() {
+    onPlay?.();
+    if (video && videoRef.current) {
+      videoRef.current.currentTime = hookStartSeconds;
+      await videoRef.current.play().catch(() => undefined);
+      setPlaying(true);
+      return;
+    }
+    if (audioRef.current && mediaPath) {
+      audioRef.current.currentTime = hookStartSeconds;
+      await audioRef.current.play().catch(() => undefined);
+      setPlaying(true);
+    }
+  }
+
+  function pause() {
+    videoRef.current?.pause();
+    audioRef.current?.pause();
+    setPlaying(false);
+  }
+
+  function onTime(current: number) {
+    setT(current);
+    const end = hookStartSeconds + cap;
+    if (current >= end) {
+      pause();
+      if (videoRef.current) videoRef.current.currentTime = hookStartSeconds;
+      if (audioRef.current) audioRef.current.currentTime = hookStartSeconds;
+      setT(hookStartSeconds);
+    }
+  }
+
+  const shown = Math.max(0, t - hookStartSeconds);
+  const pct = cap ? Math.min(100, (shown / cap) * 100) : 0;
+
+  return (
+    <div className="relative overflow-hidden bg-ink-900">
+      {video && mediaPath ? (
+        <video
+          ref={videoRef}
+          src={mediaPath}
+          poster={coverPath}
+          playsInline
+          className="aspect-video w-full object-cover"
+          onTimeUpdate={(e) => onTime(e.currentTarget.currentTime)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+        />
+      ) : (
+        <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-video">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={coverPath} alt="" className={`h-full w-full object-cover ${playing ? "kenburns" : ""}`} />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-ink-950/20" />
+          {mediaPath && <audio ref={audioRef} src={mediaPath} onTimeUpdate={(e) => onTime(e.currentTarget.currentTime)} />}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => (playing ? pause() : void start())}
+        className="absolute inset-0 flex items-center justify-center"
+        aria-label={playing ? "Pause" : "Play"}
+      >
+        {!playing && (
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-copper-400 text-ink-950 shadow-copper">
+            <span className="ml-1 text-2xl">▶</span>
+          </span>
+        )}
+      </button>
+      <div className="absolute inset-x-0 bottom-0 p-4">
+        <div className="h-0.5 bg-white/20">
+          <div className="h-full bg-copper-400" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-paper/70">
+          {formatDuration(shown)} / {formatDuration(cap)} preview
+        </p>
+      </div>
+    </div>
+  );
+}
