@@ -2,7 +2,7 @@
   "name": "callboard",
   "version": "0.1.0",
   "private": true,
-  "description": "Public $1 ranking floor for music and film. Instant Keep/Pass judging, shareable Heat votes, Cash App payouts.",
+  "description": "Blind Keep/Pass ranking for music and film. Cash pots paid on Cash App.",
   "scripts": {
     "dev": "next dev --port 3200",
     "build": "next build",

@@ -1,3 +1,4 @@
+import { assetUrl } from "./config";
 import { MIN_SCOUT_VOTES, PRICE, type Arena } from "./rules";
 import { boardPlaces, cutScore, keepRate, liveEntries, scoutTotal } from "./ranking";
 import { currentWeeks, readStore } from "./store";
@@ -42,8 +43,8 @@ export function toPublic(store: Store, entry: Entry): PublicEntry {
     logline: hiddenArtist ? "Name locked until the week closes. Judge the record, not the account." : entry.logline,
     arena: entry.arena,
     screenKind: entry.screenKind,
-    coverPath: entry.coverPath,
-    mediaPath: entry.mediaPath,
+    coverPath: assetUrl(entry.coverPath),
+    mediaPath: entry.mediaPath ? assetUrl(entry.mediaPath) : null,
     durationSeconds: entry.durationSeconds,
     hookStartSeconds: entry.hookStartSeconds,
     artist: hiddenArtist ? "Hidden artist" : user?.displayName || "Unknown",

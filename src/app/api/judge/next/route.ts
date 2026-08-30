@@ -1,5 +1,6 @@
 import { json, clientIp } from "@/lib/api";
 import { liveEntries, scoutTotal } from "@/lib/ranking";
+import { assetUrl } from "@/lib/config";
 import { isArena } from "@/lib/rules";
 import { readStore } from "@/lib/store";
 import { getOrCreateVoterId, hashIp } from "@/lib/voter";
@@ -30,8 +31,8 @@ export async function GET(req: Request) {
       arena: pick.arena,
       screenKind: pick.screenKind,
       genre: pick.genre,
-      coverPath: pick.coverPath,
-      mediaPath: pick.mediaPath,
+      coverPath: assetUrl(pick.coverPath),
+      mediaPath: pick.mediaPath ? assetUrl(pick.mediaPath) : null,
       durationSeconds: pick.durationSeconds,
       hookStartSeconds: pick.hookStartSeconds,
       remaining: pool.length,
