@@ -1,3 +1,5 @@
+import type { Arena } from "@/lib/rules";
+
 export type EmbedKind =
   | "youtube"
   | "tiktok"
@@ -14,21 +16,35 @@ export type ParsedEmbed = {
   original: string;
 };
 
-const AUDIO_KINDS = new Set<EmbedKind>(["youtube", "soundcloud", "spotify", "audiomack"]);
+/** Blind: music platforms + TikTok. */
+const BLIND_KINDS = new Set<EmbedKind>(["youtube", "soundcloud", "spotify", "audiomack", "tiktok"]);
+/** Track lounge: Blind set + Instagram (no Vimeo). */
+const TRACKS_KINDS = new Set<EmbedKind>(["youtube", "soundcloud", "spotify", "audiomack", "tiktok", "instagram"]);
+/** Film / Music Video / Creator. */
 const VIDEO_KINDS = new Set<EmbedKind>(["youtube", "tiktok", "instagram", "vimeo"]);
 
 export function isAudioEmbed(kind: EmbedKind) {
   return kind === "soundcloud" || kind === "spotify" || kind === "audiomack";
 }
 
-export function linkHelp(audioLounge: boolean) {
-  return audioLounge
-    ? "Paste a YouTube, SoundCloud, Spotify, or Audiomack link."
-    : "Paste a YouTube, TikTok, Instagram, or Vimeo link.";
+export function kindsForArena(arena: Arena): Set<EmbedKind> {
+  if (arena === "blind") return BLIND_KINDS;
+  if (arena === "tracks") return TRACKS_KINDS;
+  return VIDEO_KINDS;
 }
 
-export function embedAllowed(embed: ParsedEmbed, audioLounge: boolean) {
-  return (audioLounge ? AUDIO_KINDS : VIDEO_KINDS).has(embed.kind);
+export function linkHelp(arena: Arena) {
+  if (arena === "blind") {
+    return "Paste a YouTube, SoundCloud, Spotify, Audiomack, or TikTok link.";
+  }
+  if (arena === "tracks") {
+    return "Paste a YouTube, SoundCloud, Spotify, Audiomack, TikTok, or Instagram link.";
+  }
+  return "Paste a YouTube, TikTok, Instagram, or Vimeo link.";
+}
+
+export function embedAllowed(embed: ParsedEmbed, arena: Arena) {
+  return kindsForArena(arena).has(embed.kind);
 }
 
 export function parseEmbed(raw: string | null | undefined): ParsedEmbed | null {
