@@ -46,7 +46,7 @@ export function potCapCents(at = Date.now()) {
   return at >= POT_CAP_LIFTS_AT_MS ? POT_CAP_FULL_CENTS : POT_CAP_TEMP_CENTS;
 }
 
-/** @deprecated Use potCapCents() â€” kept for older imports. */
+/** @deprecated Use potCapCents() — kept for older imports. */
 export const POT_CAP_CENTS = POT_CAP_TEMP_CENTS;
 /** Cash App payouts after the house crowns winners. */
 export const PAYOUT_DAYS = 10;
@@ -70,7 +70,7 @@ export function namedLoungesAreFree(at = Date.now()) {
   return at < NAMED_FREE_UNTIL_MS;
 }
 
-/** @deprecated Prefer namedLoungesAreFree() â€” value frozen at module load. */
+/** @deprecated Prefer namedLoungesAreFree() — value frozen at module load. */
 export const NAMED_LOUNGES_FREE = namedLoungesAreFree();
 /** Launch price for named lounges. */
 export const NAMED_LAUNCH_CENTS = 500;
@@ -99,7 +99,7 @@ export function namedPriceShort(at = Date.now()) {
 
 export function namedPriceLine(at = Date.now()) {
   if (namedLoungesAreFree(at)) return "free";
-  if (namedLaunchActive(at)) return "$5 launch Â· regular $10";
+  if (namedLaunchActive(at)) return "$5 launch · regular $10";
   return "$10 a submission";
 }
 
@@ -176,7 +176,7 @@ export function migrateArena(raw: string, screenKind?: string | null): Arena {
   return "tracks";
 }
 
-/** Stripe US card: 2.9% + 30Â¢, rounded up. */
+/** Stripe US card: 2.9% + 30¢, rounded up. */
 export function stripeFeeCents(amountCents: number) {
   return Math.ceil(amountCents * 0.029 + 30);
 }
@@ -209,7 +209,7 @@ export function potCapLine(at = Date.now()) {
 export const POT_CAP_LINE = potCapLine();
 
 export const LINK_ONLY_LINE =
-  "Link only for now â€” no file uploads until the house buys storage. Music: YouTube, SoundCloud, Spotify, or Audiomack. Film, music videos, and Creator: YouTube, TikTok, Instagram, or Vimeo.";
+  "Paste a link. Music: YouTube, SoundCloud, Spotify, or Audiomack. Film, music videos, and Creator: YouTube, TikTok, Instagram, or Vimeo.";
 
 export const FILE_LIMIT_LINE = LINK_ONLY_LINE;
 
