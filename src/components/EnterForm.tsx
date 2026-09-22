@@ -165,11 +165,12 @@ export default function EnterForm({
       <div className="border border-white/10 p-4">
         <p className="eyebrow">Your links — hidden until you win</p>
         <p className="mt-2 text-xs text-white/45">
-          Instagram, TikTok, YouTube, Spotify, Apple Music. Nobody sees these until you land in the top 3.
+          Instagram, TikTok, Facebook, YouTube, Spotify, Apple Music. Nobody sees these until you land in the top 3.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <input name="instagram" placeholder="Instagram" />
           <input name="tiktok" placeholder="TikTok" />
+          <input name="facebook" placeholder="Facebook" />
           <input name="youtube" placeholder="YouTube" />
           <input name="spotify" placeholder="Spotify" />
           <input name="appleMusic" placeholder="Apple Music" />
@@ -201,7 +202,7 @@ export default function EnterForm({
           }
         />
         <span className="mt-1 block text-xs text-white/45">
-          {linkHelp(audio)} It plays on Scroll Call®. File uploads are off until the house buys storage.
+          {linkHelp(audio)} It plays on Scroll Call®.
           {!audio ? " YouTube, TikTok, and Vimeo play best. Instagram may ask viewers to open the app." : ""}
         </span>
       </label>
