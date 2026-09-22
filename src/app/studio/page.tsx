@@ -48,7 +48,7 @@ export default async function StudioPage({
       )}
       <p className="mt-4 text-mist">
         Blind left today: {remainingBlind}. $5 tracks/videos left: {remainingFloor}. Winnings go to{" "}
-        {user.cashtag || "your Cash App cashtag"}.
+        {[user.cashtag, user.paypalEmail].filter(Boolean).join(" or ") || "Cash App or PayPal (optional — add below)"}.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <Link href="/enter" className="btn-copper">
@@ -61,7 +61,7 @@ export default async function StudioPage({
         </form>
       </div>
 
-      <StudioClient cashtag={user.cashtag} />
+      <StudioClient cashtag={user.cashtag} paypalEmail={user.paypalEmail || ""} />
 
       <h2 className="display mt-12 text-3xl">Your cuts</h2>
       {mine.length === 0 ? (
@@ -86,7 +86,7 @@ export default async function StudioPage({
 
       <h2 className="display mt-12 text-3xl">Payouts</h2>
       {payouts.length === 0 ? (
-        <p className="mt-4 text-mist">When you place, Cash App payouts land here.</p>
+        <p className="mt-4 text-mist">When you place, Cash App or PayPal payouts land here.</p>
       ) : (
         <ul className="mt-4 divide-y divide-white/10 border border-white/10">
           {payouts.map((p) => (
@@ -95,7 +95,9 @@ export default async function StudioPage({
                 <p className="uppercase tracking-[0.16em] text-[11px] text-copper-300">
                   {p.place} · {p.weekId}
                 </p>
-                <p className="text-sm text-mist">{p.cashtag}</p>
+                <p className="text-sm text-mist">
+                  {[p.cashtag, p.paypalEmail].filter(Boolean).join(" · ") || "—"}
+                </p>
               </div>
               <p>
                 {formatUsd(p.amountCents)} · {p.status}

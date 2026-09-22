@@ -38,8 +38,10 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      <h2 className="display mt-12 text-3xl">Cash App payouts</h2>
-      <p className="mt-2 text-sm text-mist">Copy the cashtag, send in Cash App, mark sent.</p>
+      <h2 className="display mt-12 text-3xl">Payouts</h2>
+      <p className="mt-2 text-sm text-mist">
+        Copy the Cash App cashtag or PayPal email, send manually, mark sent.
+      </p>
       <AdminPayouts
         rows={pending.map((p) => {
           const entry = store.entries.find((e) => e.id === p.entryId);
@@ -50,13 +52,29 @@ export default async function AdminPage() {
             weekId: p.weekId,
             arena: p.arena,
             amountCents: p.amountCents,
-            cashtag: p.cashtag,
+            cashtag: p.cashtag || user?.cashtag || "",
+            paypalEmail: p.paypalEmail || user?.paypalEmail || "",
             title: entry?.title || "",
             artist: user?.displayName || "",
             email: user?.email || "",
           };
         })}
       />
+
+      <h2 className="display mt-12 text-3xl">Accounts</h2>
+      <ul className="mt-4 divide-y divide-white/10 border border-white/10 text-sm">
+        {store.users.map((u) => (
+          <li key={u.id} className="flex flex-wrap justify-between gap-2 p-3">
+            <span>
+              {u.displayName} · {u.email}
+            </span>
+            <span className="text-mist">
+              {[u.cashtag, u.paypalEmail ? `PayPal ${u.paypalEmail}` : ""].filter(Boolean).join(" · ") ||
+                "no payout method"}
+            </span>
+          </li>
+        ))}
+      </ul>
 
       <h2 className="display mt-12 text-3xl">This week&apos;s entries</h2>
       <ul className="mt-4 divide-y divide-white/10 border border-white/10 text-sm">
