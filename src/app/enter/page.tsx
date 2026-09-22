@@ -19,8 +19,8 @@ export default async function EnterPage() {
           Blind is $30 and music only — name hidden. Track, Film, Music Video, and Creator lounges are $5 for launch
           (regular price is $10 a submission) and named.
           Link only for now: music on YouTube, SoundCloud, Spotify, or Audiomack; video on YouTube, TikTok, Instagram,
-          or Vimeo. Keep / Pass ranks the work, not clicks. Valid email and a Cash App cashtag required so winnings can
-          be sent.
+          or Vimeo. Keep / Pass ranks the work, not clicks. Valid email required. Cash App or PayPal optional — add in
+          Studio anytime so you are ready when the pot opens.
         </p>
         <div className="mt-8 flex gap-3">
           <Link href="/signup?next=/enter" className="btn-copper">
@@ -42,13 +42,18 @@ export default async function EnterPage() {
     video: remainingToday(store, user.id, "video"),
     creator: remainingToday(store, user.id, "creator"),
   };
+  const hasPayout = Boolean(user.cashtag || user.paypalEmail);
+  const payoutLabel =
+    [user.cashtag, user.paypalEmail ? `PayPal ${user.paypalEmail}` : ""].filter(Boolean).join(" · ") ||
+    "payout optional";
+
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
-      <p className="eyebrow">{user.cashtag}</p>
+      <p className="eyebrow">{payoutLabel}</p>
       <h1 className="display mt-3 text-5xl">Put it on the board</h1>
       <p className="mt-4 text-mist">
         {store.chargesLive
-          ? `Blind is $30 — music tracks only, one per 24 hours. Track, Film, Music Video, and Creator lounges are $5 for launch (regular $10 a submission), three per 24 hours. Link only — no file uploads until the house buys storage. Keep / Pass ranks the work. ${potCapLine()} The week closes Sunday. Cash App payouts are sent within 10 days of the crown.`
+          ? `Blind is $30 — music tracks only, one per 24 hours. Track, Film, Music Video, and Creator lounges are $5 for launch (regular $10 a submission), three per 24 hours. Paste a link — music on YouTube, SoundCloud, Spotify, or Audiomack; video on YouTube, TikTok, Instagram, or Vimeo. Keep / Pass ranks the work. ${potCapLine()} The week closes Sunday. Cash App or PayPal payouts are sent within 10 days of the crown.`
           : "The cash pot is off while the board fills. Enter free. Same judging. When the house opens the pot, new Blind entries will be $30 and the $5 lounges open."}
       </p>
       {(user.freePasses || 0) > 0 && (
@@ -57,14 +62,14 @@ export default async function EnterPage() {
           enter without paying.
         </p>
       )}
-      {!user.cashtag && (
-        <p className="mt-4 border border-copper-400/40 p-4 text-sm">
-          Add a Cash App cashtag in <Link href="/studio" className="text-copper-300">Studio</Link> before you can be
-          paid.
+      {!hasPayout && (
+        <p className="mt-4 border border-white/15 p-4 text-sm text-mist">
+          Tip: add Cash App or PayPal in <Link href="/studio" className="text-copper-300">Studio</Link> so Tina can
+          pay you if you place. Not required to enter.
         </p>
       )}
       <EnterForm
-        remaining={user.cashtag ? remaining : { blind: 0, tracks: 0, film: 0, video: 0, creator: 0 }}
+        remaining={remaining}
         stripeReady={stripeEnabled()}
         chargesLive={Boolean(store.chargesLive)}
         freePasses={user.freePasses || 0}
