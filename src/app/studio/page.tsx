@@ -58,7 +58,7 @@ export default async function StudioPage({
       )}
       {sp.beta === "1" && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
-          You&apos;re on the board — named lounges are free during beta. Copy the share link below and send it to your
+          You're on the board — named lounges are free during beta. Copy the share link below and send it to your
           fans. Shares never rank the pot.
         </p>
       )}
@@ -82,7 +82,7 @@ export default async function StudioPage({
       <p className="mt-4 text-mist">
         Blind left today: {remaining.blind} of 1. Other lounges: Track {remaining.tracks}, Film {remaining.film}, Video{" "}
         {remaining.video}, Creator {remaining.creator} of 3 each. Free passes: {user.freePasses || 0}. Winnings go to{" "}
-        {user.cashtag || "your Cash App cashtag"}.
+        {[user.cashtag, user.paypalEmail].filter(Boolean).join(" or ") || "Cash App or PayPal (optional — add below)"}.
       </p>
       <p className="mt-3 text-sm text-mist">
         Fan pot this week: {fanRow ? `${fanRow.votes} judged · rank #${fanRow.rank}` : "Judge cuts to earn a shot."} Add
@@ -104,7 +104,11 @@ export default async function StudioPage({
         </form>
       </div>
 
-      <StudioClient cashtag={user.cashtag} links={full?.links || { ...EMPTY_LINKS }} />
+      <StudioClient
+        cashtag={user.cashtag}
+        paypalEmail={full?.paypalEmail || user.paypalEmail || ""}
+        links={{ ...EMPTY_LINKS, ...(full?.links || {}) }}
+      />
 
       <h2 className="display mt-12 text-3xl">Your cuts</h2>
       {mine.length === 0 ? (
@@ -134,7 +138,7 @@ export default async function StudioPage({
 
       <h2 className="display mt-12 text-3xl">Payouts</h2>
       {payouts.length === 0 ? (
-        <p className="mt-4 text-mist">When you place as an artist or a featured fan, Cash App payouts land here.</p>
+        <p className="mt-4 text-mist">When you place as an artist or a featured fan, Cash App or PayPal payouts land here.</p>
       ) : (
         <ul className="mt-4 divide-y divide-white/10 border border-white/10">
           {payouts.map((p) => (
@@ -143,7 +147,9 @@ export default async function StudioPage({
                 <p className="uppercase tracking-[0.16em] text-[11px] text-copper-300">
                   {p.place} · {p.weekId}
                 </p>
-                <p className="text-sm text-mist">{p.cashtag}</p>
+                <p className="text-sm text-mist">
+                  {[p.cashtag, p.paypalEmail].filter(Boolean).join(" · ") || "—"}
+                </p>
               </div>
               <p>
                 {formatUsd(p.amountCents)} · {p.status}
