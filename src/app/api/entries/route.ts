@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   if (!genre) return json({ error: "Add a genre." }, 400);
   if (!logline) return json({ error: "Add a one-line pitch." }, 400);
   if (mediaFile || coverFile) {
-    return json({ error: "File uploads are off until the house buys storage. Paste a link instead." }, 400);
+    return json({ error: "Paste a link instead of uploading a file." }, 400);
   }
   if (!embed) {
     return json({ error: sourceUrl ? `That link is not supported. ${linkHelp(audio)}` : linkHelp(audio) }, 400);
