@@ -186,7 +186,7 @@ function migrate(store: Store): Store {
   for (const user of store.users) {
     if (user.freePasses === undefined) user.freePasses = 0;
     if (user.earnedFoundingPass === undefined) user.earnedFoundingPass = false;
-    if (!user.links) user.links = { ...EMPTY_LINKS };
+    user.links = { ...EMPTY_LINKS, ...(user.links || {}) };
   }
   for (const vote of store.votes) {
     if (vote.userId === undefined) vote.userId = null;
@@ -205,7 +205,7 @@ function migrate(store: Store): Store {
   }
   for (const entry of store.entries) {
     entry.arena = migrateArena(entry.arena, entry.screenKind);
-    if (!entry.links) entry.links = { ...EMPTY_LINKS };
+    entry.links = { ...EMPTY_LINKS, ...(entry.links || {}) };
     if (entry.fanCents === undefined) entry.fanCents = 0;
     if (entry.houseCents === undefined || entry.feeCents === undefined) {
       const split = splitEntry(entry.arena);
