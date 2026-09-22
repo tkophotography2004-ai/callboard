@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BoardList from "@/components/BoardList";
-import { ARENAS, ARENA_LABEL, formatUsd, isArena, splitEntry, type Arena } from "@/lib/rules";
-import { boardPlaces, liveEntries } from "@/lib/ranking";
+import FeaturedWinners from "@/components/FeaturedWinners";
+import { ARENAS, ARENA_LABEL, PAYDAY_LINE, potCapLine, formatUsd, isArena, type Arena } from "@/lib/rules";
+import { cappedPot } from "@/lib/money";
+import { boardPlaces, featuredPlaces, liveEntries } from "@/lib/ranking";
 import { toPublic } from "@/lib/queries";
 import { currentWeeks, readStore } from "@/lib/store";
 import { formatCountdown, isoWeekId, msUntilWeekEnd, weekLabel } from "@/lib/week";
@@ -22,8 +24,7 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
   const weeks = currentWeeks(store);
   const live = liveEntries(store, arena, weekId);
   const rawPot = weeks[arena].potCents || live.reduce((s, e) => s + e.potCents, 0);
-  const pot = store.chargesLive ? rawPot : 0;
-  const split = splitEntry(arena);
+  const pot = store.chargesLive ? cappedPot(rawPot) : 0;
   const rows = boardPlaces(live).map((p) => ({
     rank: p.rank,
     public: toPublic(store, p.entry),
@@ -31,6 +32,11 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
     keepPct: p.keepPct,
     sample: p.sample,
   }));
+  const featuredWeek = [...store.weeks]
+    .filter((w) => w.arena === arena && w.status === "closed")
+    .sort((a, b) => Date.parse(b.closedAt || b.openedAt) - Date.parse(a.closedAt || a.openedAt))[0];
+  const featuredEntries = featuredWeek ? liveEntries(store, arena, featuredWeek.id) : [];
+  const winners = featuredPlaces(featuredEntries).map((p) => toPublic(store, p.entry));
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
@@ -45,11 +51,13 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
       </div>
       <p className="mt-4 max-w-xl text-mist">
         {arena === "blind"
-          ? "Artist names are locked until Sunday. Ranked only by Keep / Pass. Clicks cannot touch this pot."
-          : "Ranked by Keep / Pass after a stranger actually plays it. Share count is shown. It does not buy rank."}{" "}
+          ? "Music tracks only. Artist names are locked until Sunday. Ranked only by Keep / Pass. One entry per 24 hours. Clicks cannot touch this pot."
+          : arena === "creator"
+            ? "For people who already pay to promote on social. Paste a YouTube, TikTok, Instagram, or Vimeo link. Keep / Pass ranks it. Share count is shown. It does not buy rank."
+            : "Ranked by Keep / Pass after a stranger actually plays it. Film and music videos can be a linked YouTube, TikTok, Instagram, or Vimeo. Share count is shown. It does not buy rank."}{" "}
         {store.chargesLive
-          ? `Entry ${formatUsd(split.entryCents)} · house ${formatUsd(split.houseCents)} · pot ${formatUsd(split.potCents)} each.`
-          : `Pot is off. Enter free. When it opens: ${formatUsd(split.entryCents)} in, house keeps ${formatUsd(split.houseCents)}.`}
+          ? `${potCapLine()} ${PAYDAY_LINE}`
+          : `Pot is off. Enter free. When it opens: ${potCapLine()}`}
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
         {ARENAS.map((a) => (
@@ -60,7 +68,11 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
         <Link href={`/judge?arena=${arena}`} className="btn-ghost !py-2">
           Judge this board
         </Link>
+        <Link href="/enter" className="btn-ghost !py-2">
+          Enter
+        </Link>
       </div>
+      <FeaturedWinners weekId={featuredWeek?.id || weekId} winners={winners} />
       <BoardList rows={rows} hideHeat={arena === "blind"} />
     </div>
   );

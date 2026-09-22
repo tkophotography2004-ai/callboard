@@ -10,11 +10,11 @@ export default async function SignupPage({
   const { next } = await searchParams;
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
-      <p className="eyebrow">Artists & filmmakers</p>
-      <h1 className="display mt-3 text-5xl">Join Callboard</h1>
+      <p className="eyebrow">Artists, filmmakers & fans</p>
+      <h1 className="display mt-3 text-5xl">Join Scroll Call®</h1>
       <p className="mt-4 text-mist">
-        Valid email. Cash App and PayPal are optional for winnings (add later in Studio — PayPal helps outside the
-        US). Blind is $20 with your name off. Tracks and videos are $5.
+        Valid email. Cash App cashtag for winnings — artists and fans. Blind is $30 music, name off. Named lounges are
+        $5 for launch (regular $10 a submission). Judge to earn from the fan pot.
       </p>
       <AuthForm mode="signup" next={next || "/enter"} />
     </div>

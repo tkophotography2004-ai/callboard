@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
+import { cookiePath } from "./config";
 
 const COOKIE = "cb_vid";
 const MAX_AGE = 60 * 60 * 24 * 400;
@@ -16,7 +17,7 @@ export async function getOrCreateVoterId() {
   jar.set(COOKIE, id, {
     httpOnly: true,
     sameSite: "lax",
-    path: "/",
+    path: cookiePath(),
     maxAge: MAX_AGE,
   });
   return id;

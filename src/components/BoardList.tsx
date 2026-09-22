@@ -1,4 +1,6 @@
 import Link from "next/link";
+import ShareBar from "./ShareBar";
+import { entryUrl } from "@/lib/config";
 import { formatDuration } from "@/lib/format";
 import { SCREEN_KIND_LABEL } from "@/lib/rules";
 import type { PublicEntry } from "@/lib/queries";
@@ -11,7 +13,7 @@ export default function BoardList({
   hideHeat?: boolean;
 }) {
   if (!rows.length) {
-    return <p className="mt-6 text-mist">No paid entries on this board yet.</p>;
+    return <p className="mt-6 text-mist">Nothing on this board yet. Be first.</p>;
   }
   return (
     <ol className="mt-6 divide-y divide-white/10 border border-white/10">
@@ -40,6 +42,9 @@ export default function BoardList({
                   <p className="text-white/40">Building</p>
                 )}
                 {!hideHeat && !e.hiddenArtist && <p className="mt-1 text-mist">{e.heatVotes} shares</p>}
+                <div className="mt-2">
+                  <ShareBar compact url={entryUrl(e.slug)} title={e.title} />
+                </div>
               </div>
             </Link>
           </li>

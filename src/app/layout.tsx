@@ -3,8 +3,10 @@ import { Figtree, Fraunces } from "next/font/google";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import LoungeNav from "@/components/LoungeNav";
 import { getSessionUser } from "@/lib/auth";
-import { APP_NAME, TAGLINE, siteUrl } from "@/lib/config";
+import LiveBadge from "@/components/LiveBadge";
+import { APP_NAME_MARK, TAGLINE, siteUrl } from "@/lib/config";
 import { readStore } from "@/lib/store";
 import "./globals.css";
 
@@ -21,14 +23,14 @@ const sans = Figtree({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: `${APP_NAME} — ${TAGLINE}`,
-    template: `%s · ${APP_NAME}`,
+    default: `${APP_NAME_MARK} — ${TAGLINE}`,
+    template: `%s · ${APP_NAME_MARK}`,
   },
   description:
-    "Blind $20 talent board — names off, Keep/Pass only. Tracks and videos $5. Clicks never rank the pot. Winners paid on Cash App.",
+    "Blind $30 music board — names off, Keep/Pass only. $5 launch lounges (regular $10). Fans earn from the fan pot. Clicks never rank. Winners paid on Cash App.",
   icons: { icon: "/favicon.svg" },
   openGraph: {
-    title: APP_NAME,
+    title: APP_NAME_MARK,
     description: TAGLINE,
     images: ["/seed/hero.jpg"],
     type: "website",
@@ -50,12 +52,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <body className="grain font-sans antialiased">
-        {!store.chargesLive && (
-          <div className="bg-copper-400 px-4 py-2 text-center text-[11px] uppercase tracking-[0.2em] text-ink-950">
-            Founding board — free to enter. Cash pot and charges are off until the house opens them.
-          </div>
-        )}
+        <div className={`flex justify-center px-4 py-2 ${store.chargesLive ? "bg-[#05140a]" : "bg-copper-400"}`}>
+          <LiveBadge live={Boolean(store.chargesLive)} href="/enter" />
+        </div>
         <Header user={user} />
+        <LoungeNav />
         <main className="min-h-[80dvh] pb-24 md:pb-0">{children}</main>
         <Footer />
         <BottomNav />

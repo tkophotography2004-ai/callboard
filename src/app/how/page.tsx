@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import {
   BRIUNKA_EMAIL,
   BRIUNKA_IP_LINE,
@@ -9,7 +9,7 @@ import {
   PAYDAY_LINE,
   potCapLine,
   WEEKLY_GIVEAWAY_LINE,
-  NAMED_LOUNGES_FREE,
+  namedLoungesAreFree,
   namedPriceLine,
   namedPriceSentence,
   formatUsd,
@@ -80,7 +80,7 @@ export default function HowPage() {
             until the house buys storage. Each lounge has its own pot. Three entries per lounge per 24 hours.
           </p>
           <p className="mt-3">
-            {NAMED_LOUNGES_FREE
+            {namedLoungesAreFree()
               ? "No charge during beta. Share the link with your fans."
               : `You pay ${formatUsd(floor.entryCents)} for launch. Regular price is $10 a submission.`}{" "}
             {potCapLine()}
@@ -96,7 +96,7 @@ export default function HowPage() {
             Paste the link. It plays on Scroll Call®. Keep / Pass still ranks it. You still have a shot at the pot.
           </p>
           <p className="mt-3">
-            {NAMED_LOUNGES_FREE
+            {namedLoungesAreFree()
               ? "No charge during beta. Share the link with your fans."
               : `You pay ${formatUsd(floor.entryCents)} for launch. Regular price is $10 a submission.`}{" "}
             {potCapLine()}

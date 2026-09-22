@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import { cookiePath } from "./config";
 import { readStore } from "./store";
 import type { SessionUser, User } from "./types";
 
@@ -50,8 +51,10 @@ export function toSession(user: User): SessionUser {
     username: user.username,
     displayName: user.displayName,
     role: user.role,
-    cashtag: user.cashtag,
+    cashtag: user.cashtag || "",
     paypalEmail: user.paypalEmail || "",
+    freePasses: user.freePasses || 0,
+    earnedFoundingPass: Boolean(user.earnedFoundingPass),
   };
 }
 
@@ -60,7 +63,7 @@ export async function setSession(userId: string) {
   jar.set(COOKIE, sign(userId), {
     httpOnly: true,
     sameSite: "lax",
-    path: "/",
+    path: cookiePath(),
     maxAge: MAX_AGE,
   });
 }
@@ -78,7 +81,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!payload) return null;
   const store = await readStore();
   const user = store.users.find((u) => u.id === payload.userId);
-  if (!user) return null;
+  if (!user || user.disabled) return null;
   return toSession(user);
 }
 
@@ -91,7 +94,7 @@ export async function setAdminCookie() {
   jar.set(ADMIN_COOKIE, `${body}.${sig}`, {
     httpOnly: true,
     sameSite: "lax",
-    path: "/",
+    path: cookiePath(),
     maxAge: MAX_AGE,
   });
 }

@@ -1,18 +1,17 @@
 import { nanoid } from "nanoid";
 import { isResponse, json, requireUser } from "@/lib/api";
-import { uniqueSlug } from "@/lib/format";
-import { extFromFile, isAudioFile, isImageFile, isVideoFile, saveUploadFile } from "@/lib/media";
+import { embedAllowed, linkHelp, parseEmbed } from "@/lib/embed";
+import { readArtistLinks, uniqueSlug } from "@/lib/format";
 import {
-  MAX_AUDIO_BYTES,
-  MAX_AUDIO_SECONDS,
-  MAX_IMAGE_BYTES,
-  MAX_VIDEO_BYTES,
-  MAX_VIDEO_SECONDS,
   PRICE,
+  PUBLIC_CLOSED,
   isArena,
+  isAudioLounge,
+  loungeRequiresPayment,
   type ScreenKind,
 } from "@/lib/rules";
 import { remainingToday } from "@/lib/queries";
+import { consumeFreePass } from "@/lib/promo";
 import { markEntryPaid, markFoundingEntry } from "@/lib/money";
 import { createEntryCheckout, stripeEnabled } from "@/lib/stripe";
 import { updateStore } from "@/lib/store";
@@ -21,59 +20,54 @@ import { isoWeekId } from "@/lib/week";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  if (PUBLIC_CLOSED) {
+    return json({ error: "Scroll Call is paused. Check back when the house reopens." }, 503);
+  }
   const user = await requireUser();
   if (isResponse(user)) return user;
+  /* Cash App / PayPal optional at entry */
+
   const data = await req.formData();
   const arenaRaw = String(data.get("arena") || "tracks");
   const arena = isArena(arenaRaw) ? arenaRaw : "tracks";
   const title = String(data.get("title") || "").trim();
   const genre = String(data.get("genre") || "").trim();
   const logline = String(data.get("logline") || "").trim();
-  const screenKindRaw = String(data.get("screenKind") || "series");
   const screenKind: ScreenKind | null =
-    arena === "screen"
-      ? screenKindRaw === "music-video" || screenKindRaw === "short"
-        ? screenKindRaw
-        : "series"
-      : null;
+    arena === "video" ? "music-video" : arena === "film" ? "short" : null;
   const durationSeconds = Math.round(Number(data.get("durationSeconds") || 0));
   const cover = data.get("cover");
   const media = data.get("media");
+  const mediaFile = media instanceof File && media.size > 0 ? media : null;
+  const coverFile = cover instanceof File && cover.size > 0 ? cover : null;
+  const sourceUrl = String(data.get("sourceUrl") || "").trim();
+  const usePass = String(data.get("useFreePass") || "") === "1";
+  const audio = isAudioLounge(arena);
+  const embed = parseEmbed(sourceUrl);
 
   if (!title) return json({ error: "Add a title." }, 400);
   if (!genre) return json({ error: "Add a genre." }, 400);
   if (!logline) return json({ error: "Add a one-line pitch." }, 400);
-  if (!(media instanceof File) || !media.size) return json({ error: "Add the audio or video file." }, 400);
-
-  if (arena === "tracks" || arena === "blind") {
-    if (!isAudioFile(media)) return json({ error: "This board takes MP3, WAV, or M4A." }, 400);
-    if (media.size > MAX_AUDIO_BYTES) return json({ error: "Audio must be under 40MB." }, 400);
-    if (durationSeconds > MAX_AUDIO_SECONDS) return json({ error: "Tracks must be under 10 minutes." }, 400);
-  } else {
-    if (!isVideoFile(media)) return json({ error: "Screen files must be MP4, WebM, or MOV." }, 400);
-    if (media.size > MAX_VIDEO_BYTES) return json({ error: "Video must be under 180MB." }, 400);
-    if (durationSeconds > MAX_VIDEO_SECONDS) return json({ error: "Teasers must be under 2 minutes." }, 400);
+  if (mediaFile || coverFile) {
+    return json({ error: "File uploads are off until the house buys storage. Paste a link instead." }, 400);
   }
-  if (cover instanceof File && cover.size > 0) {
-    if (!isImageFile(cover)) return json({ error: "Cover must be JPG, PNG, or WebP." }, 400);
-    if (cover.size > MAX_IMAGE_BYTES) return json({ error: "Cover must be under 8MB." }, 400);
+  if (!embed) {
+    return json({ error: sourceUrl ? `That link is not supported. ${linkHelp(audio)}` : linkHelp(audio) }, 400);
+  }
+  if (!embedAllowed(embed, audio)) {
+    return json({ error: `That site is not allowed in this lounge. ${linkHelp(audio)}` }, 400);
   }
 
-  let coverPath = "/seed/hero.jpg";
-  if (cover instanceof File && cover.size > 0) {
-    coverPath = await saveUploadFile(`cover_${nanoid(12)}${extFromFile(cover, ".jpg")}`, cover);
-  }
-  const mediaPath = await saveUploadFile(
-    `media_${nanoid(12)}${extFromFile(media, arena === "screen" ? ".mp4" : ".mp3")}`,
-    media,
-  );
+  const coverPath = "/seed/hero.jpg";
+  const mediaPath = embed.original;
+  const bytes = 0;
 
   const created = await updateStore((store) => {
     if (remainingToday(store, user.id, arena) <= 0) {
       throw new Error(
         arena === "blind"
           ? "Blind is one entry per 24 hours. Come back tomorrow."
-          : `You already used ${PRICE.tracks.maxPerDay} $5 submissions in the last 24 hours.`,
+          : `You already used ${PRICE[arena].maxPerDay} entries in this lounge in the last 24 hours.`,
       );
     }
     const slug = uniqueSlug(title, new Set(store.entries.map((e) => e.slug)));
@@ -88,9 +82,9 @@ export async function POST(req: Request) {
       logline,
       coverPath,
       mediaPath,
-      durationSeconds: durationSeconds || (arena === "screen" ? 60 : 45),
+      durationSeconds: durationSeconds || (isAudioLounge(arena) ? 45 : 60),
       hookStartSeconds: 0,
-      bytes: media.size,
+      bytes,
       status: "draft" as const,
       weekId: isoWeekId(),
       createdAt: new Date().toISOString(),
@@ -99,31 +93,71 @@ export async function POST(req: Request) {
       potCents: 0,
       houseCents: 0,
       feeCents: 0,
+      fanCents: 0,
       scoutKeeps: 0,
       scoutPasses: 0,
       heatVotes: 0,
       playCount: 0,
+      links: readArtistLinks(data),
     };
     store.entries.push(entry);
+    const owner = store.users.find((u) => u.id === user.id);
+    const hadFounding = Boolean(owner?.earnedFoundingPass);
+    if (usePass && loungeRequiresPayment(arena, store.chargesLive) && owner && consumeFreePass(owner)) {
+      markEntryPaid(store, entry, "pass");
+      return {
+        entry,
+        founding: false as const,
+        beta: false as const,
+        pass: true as const,
+        awardedPass: Boolean(owner.earnedFoundingPass) && !hadFounding,
+      };
+    }
     if (!store.chargesLive) {
       markFoundingEntry(store, entry);
-      return { entry, founding: true as const };
+      return {
+        entry,
+        founding: true as const,
+        beta: false as const,
+        pass: false as const,
+        awardedPass: Boolean(owner?.earnedFoundingPass) && !hadFounding,
+      };
     }
-    return { entry, founding: false as const };
+    if (!loungeRequiresPayment(arena, store.chargesLive)) {
+      markFoundingEntry(store, entry);
+      return {
+        entry,
+        founding: false as const,
+        beta: true as const,
+        pass: false as const,
+        awardedPass: Boolean(owner?.earnedFoundingPass) && !hadFounding,
+      };
+    }
+    return { entry, founding: false as const, beta: false as const, pass: false as const, awardedPass: false };
   }).catch((err: Error) => err);
 
   if (created instanceof Error) return json({ error: created.message }, 400);
 
-  if (created.founding) {
-    return json({ ok: true, founding: true, slug: created.entry.slug });
+  if (created.founding || created.pass || created.beta) {
+    return json({
+      ok: true,
+      founding: created.founding,
+      beta: created.beta,
+      pass: created.pass,
+      awardedPass: created.awardedPass,
+      slug: created.entry.slug,
+    });
   }
 
   if (!stripeEnabled()) {
-    await updateStore((store) => {
+    const demo = await updateStore((store) => {
       const row = store.entries.find((e) => e.id === created.entry.id);
+      const owner = store.users.find((u) => u.id === user.id);
+      const had = Boolean(owner?.earnedFoundingPass);
       if (row) markEntryPaid(store, row, "demo");
+      return { awardedPass: Boolean(owner?.earnedFoundingPass) && !had };
     });
-    return json({ ok: true, demo: true, slug: created.entry.slug });
+    return json({ ok: true, demo: true, slug: created.entry.slug, awardedPass: demo.awardedPass });
   }
 
   let session;

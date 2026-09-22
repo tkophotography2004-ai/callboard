@@ -10,10 +10,13 @@ export type User = {
   displayName: string;
   role: Role;
   cashtag: string;
-  /** PayPal email for winnings (optional). */
   paypalEmail: string;
   bio: string;
   createdAt: string;
+  freePasses: number;
+  earnedFoundingPass: boolean;
+  disabled?: boolean;
+  links: ArtistLinks;
 };
 
 export type SessionUser = {
@@ -24,6 +27,26 @@ export type SessionUser = {
   role: Role;
   cashtag: string;
   paypalEmail: string;
+  freePasses: number;
+  earnedFoundingPass: boolean;
+};
+
+export type ArtistLinks = {
+  instagram: string;
+  tiktok: string;
+  youtube: string;
+  spotify: string;
+  appleMusic: string;
+  other: string;
+};
+
+export const EMPTY_LINKS: ArtistLinks = {
+  instagram: "",
+  tiktok: "",
+  youtube: "",
+  spotify: "",
+  appleMusic: "",
+  other: "",
 };
 
 export type EntryStatus = "draft" | "paid" | "removed";
@@ -50,10 +73,12 @@ export type Entry = {
   potCents: number;
   houseCents: number;
   feeCents: number;
+  fanCents: number;
   scoutKeeps: number;
   scoutPasses: number;
   heatVotes: number;
   playCount: number;
+  links: ArtistLinks;
 };
 
 export type VoteKind = "scout" | "heat";
@@ -64,6 +89,7 @@ export type Vote = {
   kind: VoteKind;
   keep: boolean;
   voterId: string;
+  userId: string | null;
   ipHash: string;
   createdAt: string;
 };
@@ -82,13 +108,22 @@ export type Week = {
   heatWinnerId: string | null;
 };
 
+export type FanWeek = {
+  weekId: string;
+  status: WeekStatus;
+  openedAt: string;
+  closedAt: string | null;
+  potCents: number;
+  winnerIds: string[];
+};
+
 export type PayoutStatus = "pending" | "sent" | "void";
 
 export type Payout = {
   id: string;
   weekId: string;
   arena: Arena;
-  place: "cut-1" | "cut-2" | "heat";
+  place: "cut-1" | "cut-2" | "heat" | "fan-1" | "fan-2" | "fan-3";
   entryId: string;
   userId: string;
   cashtag: string;
@@ -105,8 +140,16 @@ export type Store = {
   votes: Vote[];
   weeks: Week[];
   payouts: Payout[];
+  fanWeeks: FanWeek[];
   houseCents: number;
   /** When false, entries are free and no prize money is collected. Flip on in /admin. */
   chargesLive: boolean;
   chargesLiveAt: string | null;
+  foundingPassCount: number;
+  weeklyGiveaway: {
+    weekId: string;
+    userId: string | null;
+    username: string;
+    displayName: string;
+  } | null;
 };

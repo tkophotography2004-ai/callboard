@@ -2,6 +2,7 @@ import Link from "next/link";
 import EnterForm from "@/components/EnterForm";
 import { getSessionUser } from "@/lib/auth";
 import { remainingToday } from "@/lib/queries";
+import { potCapLine } from "@/lib/rules";
 import { stripeEnabled } from "@/lib/stripe";
 import { readStore } from "@/lib/store";
 
@@ -15,8 +16,11 @@ export default async function EnterPage() {
         <p className="eyebrow">Two ways in</p>
         <h1 className="display mt-3 text-5xl">Enter the board</h1>
         <p className="mt-4 text-mist">
-          Blind hides your name. Tracks and videos are named. Keep / Pass ranks the work, not clicks. Valid email and
-          Cash App or PayPal optional — add in Studio anytime so you are ready when the pot opens.
+          Blind is $30 and music only — name hidden. Track, Film, Music Video, and Creator lounges are $5 for launch
+          (regular price is $10 a submission) and named.
+          Link only for now: music on YouTube, SoundCloud, Spotify, or Audiomack; video on YouTube, TikTok, Instagram,
+          or Vimeo. Keep / Pass ranks the work, not clicks. Valid email and a Cash App cashtag required so winnings can
+          be sent.
         </p>
         <div className="mt-8 flex gap-3">
           <Link href="/signup?next=/enter" className="btn-copper">
@@ -34,32 +38,36 @@ export default async function EnterPage() {
   const remaining = {
     blind: remainingToday(store, user.id, "blind"),
     tracks: remainingToday(store, user.id, "tracks"),
-    screen: remainingToday(store, user.id, "screen"),
+    film: remainingToday(store, user.id, "film"),
+    video: remainingToday(store, user.id, "video"),
+    creator: remainingToday(store, user.id, "creator"),
   };
-  const hasPayout = Boolean(user.cashtag || user.paypalEmail);
-  const payoutLabel =
-    [user.cashtag, user.paypalEmail ? `PayPal ${user.paypalEmail}` : ""].filter(Boolean).join(" · ") ||
-    "payout optional";
-
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
-      <p className="eyebrow">{payoutLabel}</p>
+      <p className="eyebrow">{user.cashtag}</p>
       <h1 className="display mt-3 text-5xl">Put it on the board</h1>
       <p className="mt-4 text-mist">
         {store.chargesLive
-          ? "Blind is $20 because strangers cannot vote for a famous name. Tracks and videos are $5. Keep / Pass ranks both — clicks never buy first place."
-          : "The cash pot is off while the board fills. Enter free. Same judging. When the house opens the pot, new Blind entries will be $20 and tracks/videos $5."}
+          ? `Blind is $30 — music tracks only, one per 24 hours. Track, Film, Music Video, and Creator lounges are $5 for launch (regular $10 a submission), three per 24 hours. Link only — no file uploads until the house buys storage. Keep / Pass ranks the work. ${potCapLine()} The week closes Sunday. Cash App payouts are sent within 10 days of the crown.`
+          : "The cash pot is off while the board fills. Enter free. Same judging. When the house opens the pot, new Blind entries will be $30 and the $5 lounges open."}
       </p>
-      {!hasPayout && (
-        <p className="mt-4 border border-white/15 p-4 text-sm text-mist">
-          Tip: add Cash App or PayPal in <Link href="/studio" className="text-copper-300">Studio</Link> so Tina can
-          pay you if you place. Not required to enter.
+      {(user.freePasses || 0) > 0 && (
+        <p className="mt-4 border border-copper-400/40 p-4 text-sm">
+          You have {user.freePasses} free {user.freePasses === 1 ? "pass" : "passes"}. Check the box on the form to
+          enter without paying.
+        </p>
+      )}
+      {!user.cashtag && (
+        <p className="mt-4 border border-copper-400/40 p-4 text-sm">
+          Add a Cash App cashtag in <Link href="/studio" className="text-copper-300">Studio</Link> before you can be
+          paid.
         </p>
       )}
       <EnterForm
-        remaining={remaining}
+        remaining={user.cashtag ? remaining : { blind: 0, tracks: 0, film: 0, video: 0, creator: 0 }}
         stripeReady={stripeEnabled()}
         chargesLive={Boolean(store.chargesLive)}
+        freePasses={user.freePasses || 0}
       />
     </div>
   );

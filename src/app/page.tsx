@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import BoardList from "@/components/BoardList";
 import BrandMark from "@/components/BrandMark";
 import FeaturedFans from "@/components/FeaturedFans";
@@ -9,7 +9,7 @@ import {
   ARENA_LABEL,
   FAN_POT_LINE,
   LIMITS_LINE,
-  NAMED_LOUNGES_FREE,
+  namedLoungesAreFree,
   namedPriceLine,
   namedPriceSentence,
   NOTHING_LIKE_THIS,

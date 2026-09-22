@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { siteUrl } from "./config";
-import { ARENA_LABEL, splitEntry, type Arena } from "./rules";
+import { ARENA_LABEL, potCapLine, splitEntry, type Arena } from "./rules";
 
 let client: Stripe | null = null;
 
@@ -39,11 +39,11 @@ export async function createEntryCheckout(opts: {
           currency: "usd" as const,
           unit_amount: split.entryCents,
           product_data: {
-            name: `Callboard · ${label} · ${opts.title}`,
+            name: `Scroll Call® · ${label} · ${opts.title}`,
             description:
               opts.arena === "blind"
-                ? "Blind talent board. Your name stays off. Keep/Pass ranking only."
-                : "Named board. Ranked by Keep/Pass, not clicks. After Stripe and the house cut, the rest goes in the pot.",
+                ? `Blind $30. Music only. Your name stays off. Keep/Pass ranking. ${potCapLine()}`
+                : `Named lounge. $5 launch, regular $10. Ranked by Keep/Pass. ${potCapLine()}`,
           },
         },
       },

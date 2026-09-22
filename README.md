@@ -32,3 +32,16 @@ START.bat
 http://localhost:3200 — demo `nova@callboard.app` / `callboard` — admin `/admin` password `callboard`
 
 Stripe live keys are in `.env.local`. Checkout is card or Cash App Pay.
+
+**Link only:** no file uploads until storage is paid for. Music lounges take YouTube / SoundCloud / Spotify / Audiomack. Video lounges take YouTube / TikTok / Instagram / Vimeo.
+
+**Payouts:** `/admin` has the Sunday payout checklist. Weeks close Sunday 23:59 UTC. You still send Cash App yourself and mark sent (within 10 days of the crown).
+
+## Crate (separate playlist app)
+
+Crate lives at `C:\Users\tinaa\crate` on http://localhost:3060. It is not this repo. Scroll Call admin can **Send winners to Crate** so crowned music cuts add free. Other artists pay Crate to be added.
+
+```
+CRATE_URL=http://localhost:3060
+CRATE_INTAKE_SECRET=callboard-dev-secret-change-me
+```

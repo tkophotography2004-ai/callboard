@@ -19,14 +19,19 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/studio?paid=0", req.url));
     }
     const entryId = session.metadata?.entryId;
+    let awardedPass = false;
     if (entryId) {
       await updateStore((store) => {
         const entry = store.entries.find((e) => e.id === entryId);
         if (entry && entry.status !== "paid") {
+          const owner = store.users.find((u) => u.id === entry.userId);
+          const had = Boolean(owner?.earnedFoundingPass);
           markEntryPaid(store, entry, session.id);
+          awardedPass = Boolean(owner?.earnedFoundingPass) && !had;
         }
       });
     }
+    if (awardedPass) studio.searchParams.set("pass", "1");
     return NextResponse.redirect(studio);
   } catch {
     return NextResponse.redirect(new URL("/studio", req.url));

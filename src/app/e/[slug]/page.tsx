@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ArtistLinks from "@/components/ArtistLinks";
 import HeatButton from "@/components/HeatButton";
 import MediaPlayer from "@/components/MediaPlayer";
 import ShareBar from "@/components/ShareBar";
-import { APP_NAME, entryUrl } from "@/lib/config";
+import { APP_NAME_MARK, entryUrl } from "@/lib/config";
 import { formatDuration } from "@/lib/format";
 import { ARENA_LABEL, SCREEN_KIND_LABEL } from "@/lib/rules";
 import { toPublic } from "@/lib/queries";
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: pub.hiddenArtist ? `${pub.title} — Blind cut` : `${pub.title} — ${pub.artist}`,
     description: pub.logline,
     openGraph: {
-      title: `${pub.title} · ${APP_NAME}`,
+      title: `${pub.title} · ${APP_NAME_MARK}`,
       description: pub.logline,
       images: [pub.coverPath],
     },
@@ -44,7 +45,8 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
       <p className="mt-1 text-mist">{pub.hiddenArtist ? "Artist locked until the week closes" : pub.artist}</p>
       <p className="mt-4 text-paper/80">{pub.logline}</p>
 
-      <div className="mt-6 overflow-hidden border border-white/10">
+      <div className="relative mt-6 overflow-hidden border border-white/10">
+        <ShareBar overlay url={url} title={pub.title} />
         <MediaPlayer
           coverPath={pub.coverPath}
           mediaPath={pub.mediaPath}
@@ -53,6 +55,7 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
           hookStartSeconds={pub.hookStartSeconds}
         />
       </div>
+      {pub.links && <ArtistLinks links={pub.links} />}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         {pub.hiddenArtist ? (

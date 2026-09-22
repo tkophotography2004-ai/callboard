@@ -27,7 +27,7 @@ type Reveal = {
   sample: number;
 };
 
-export default function JudgeClient({ arena }: { arena: Arena }) {
+export default function JudgeClient({ arena, signedIn = false }: { arena: Arena; signedIn?: boolean }) {
   const [card, setCard] = useState<Blind | null>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [busy, setBusy] = useState(false);
@@ -82,8 +82,11 @@ export default function JudgeClient({ arena }: { arena: Arena }) {
       </div>
       <p className="mt-3 text-sm text-mist">
         {arena === "blind"
-          ? "The artist stays hidden until the week closes. Keep means you would leave it on. Pass means skip. Clicks cannot buy this pot."
-          : "Name is hidden while you listen. Keep or Pass is the only score that pays — not plays, not shares."}
+          ? "Music only. The artist stays hidden until the week closes. Keep means you would leave it on. Pass means skip."
+          : "Name is hidden while you listen. Keep or Pass is the only score that pays — not plays, not shares."}{" "}
+        {signedIn
+          ? "This vote counts toward the fan pot."
+          : "Sign in so this vote can earn you a cut of the fan pot."}
       </p>
 
       {empty && (

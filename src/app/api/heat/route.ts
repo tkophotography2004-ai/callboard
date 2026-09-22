@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       entryId,
       kind: "heat",
       keep: true,
+      userId: null,
       voterId,
       ipHash,
       createdAt: new Date().toISOString(),

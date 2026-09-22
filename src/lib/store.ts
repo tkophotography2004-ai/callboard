@@ -1,14 +1,54 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { applyPayouts, liveEntries } from "./ranking";
+import { applyFanPayouts, applyPayouts, liveEntries } from "./ranking";
 import { seedStore } from "./seed";
-import type { Store, Week } from "./types";
+import { EMPTY_LINKS, type FanWeek, type Store, type Week } from "./types";
 import { isoWeekId, previousWeekId, weekRange } from "./week";
-import { ARENAS, splitEntry, type Arena } from "./rules";
+import { ARENAS, migrateArena, splitEntry, type Arena } from "./rules";
+import { cappedPot } from "./money";
+import { ensureWeeklyGiveaway } from "./promo";
 
-function filePath() {
+function seedPath() {
   return path.join(process.cwd(), "data", "store.json");
 }
+
+function filePath() {
+  if (process.env.VERCEL) return path.join("/tmp", "callboard-store.json");
+  return seedPath();
+}
+
+const BLOB_STORE_PATH = "callboard/store.json";
+
+function blobEnabled() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
+
+async function readBlobJson(): Promise<string | null> {
+  if (!blobEnabled()) return null;
+  try {
+    const { get } = await import("@vercel/blob");
+    const result = await get(BLOB_STORE_PATH, { access: "private" });
+    if (!result || result.statusCode !== 200 || !result.stream) return null;
+    return await new Response(result.stream).text();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/not found|404|BlobNotFound/i.test(msg)) return null;
+    console.error("blob read failed", msg);
+    return null;
+  }
+}
+
+async function writeBlobJson(json: string) {
+  if (!blobEnabled()) return;
+  const { put } = await import("@vercel/blob");
+  await put(BLOB_STORE_PATH, json, {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+  });
+}
+
 
 let memory: Store | null = null;
 let queue: Promise<unknown> = Promise.resolve();
@@ -20,9 +60,12 @@ function emptyStore(): Store {
     votes: [],
     weeks: [],
     payouts: [],
+    fanWeeks: [],
     houseCents: 0,
-    chargesLive: false,
-    chargesLiveAt: null,
+    chargesLive: true,
+    chargesLiveAt: new Date().toISOString(),
+    foundingPassCount: 0,
+    weeklyGiveaway: null,
   };
 }
 
@@ -46,6 +89,54 @@ function ensureWeek(store: Store, arena: Arena, weekId: string) {
   return week;
 }
 
+function ensureFanWeek(store: Store, weekId: string) {
+  if (!store.fanWeeks) store.fanWeeks = [];
+  let week = store.fanWeeks.find((w) => w.weekId === weekId);
+  if (!week) {
+    const { start } = weekRange(weekId);
+    week = {
+      weekId,
+      status: "open",
+      openedAt: start.toISOString(),
+      closedAt: null,
+      potCents: 0,
+      winnerIds: [],
+    };
+    store.fanWeeks.push(week);
+  }
+  return week;
+}
+
+function closeFanWeekIfDue(store: Store, weekId: string) {
+  const current = isoWeekId();
+  if (weekId === current) return;
+  const week = store.fanWeeks.find((w) => w.weekId === weekId);
+  if (!week || week.status === "closed") return;
+  if (!store.chargesLive) {
+    week.potCents = 0;
+    week.status = "closed";
+    week.closedAt = new Date().toISOString();
+    return;
+  }
+  applyFanPayouts(store, week);
+}
+
+function stripDemoPlaceholders(store: Store) {
+  const seedUsers = store.users.filter((u) => u.email.endsWith("@callboard.app"));
+  if (!seedUsers.length) return false;
+  const seedIds = new Set(seedUsers.map((u) => u.id));
+  store.users = store.users.filter((u) => !seedIds.has(u.id));
+  store.entries = store.entries.filter(
+    (e) => !seedIds.has(e.userId) && !/^e_(midnight|engine|tide|cash|glass|lot|season|last)$/.test(e.id),
+  );
+  const liveIds = new Set(store.entries.map((e) => e.id));
+  store.votes = store.votes.filter((v) => liveIds.has(v.entryId));
+  if (store.weeklyGiveaway && seedIds.has(store.weeklyGiveaway.userId || "")) {
+    store.weeklyGiveaway = { weekId: store.weeklyGiveaway.weekId, userId: null, username: "", displayName: "" };
+  }
+  return true;
+}
+
 function closeWeekIfDue(store: Store, arena: Arena, weekId: string) {
   const current = isoWeekId();
   if (weekId === current) return;
@@ -59,30 +150,63 @@ function closeWeekIfDue(store: Store, arena: Arena, weekId: string) {
     week.closedAt = new Date().toISOString();
     return;
   }
-  week.potCents = entries.reduce((sum, e) => sum + e.potCents, 0);
+  week.potCents = cappedPot(entries.reduce((sum, e) => sum + e.potCents, 0));
   const users = new Map(store.users.map((u) => [u.id, u]));
   applyPayouts(store, week, entries, users);
 }
 
+let persistAfterMigrate = false;
+
 function migrate(store: Store): Store {
+  for (const user of store.users) {
+    if (typeof (user as { paypalEmail?: string }).paypalEmail !== "string") {
+      (user as { paypalEmail: string }).paypalEmail = "";
+      persistAfterMigrate = true;
+    }
+  }
   if (!store.users) store.users = [];
   if (!store.entries) store.entries = [];
   if (!store.votes) store.votes = [];
   if (!store.weeks) store.weeks = [];
   if (!store.payouts) store.payouts = [];
+  if (!store.fanWeeks) store.fanWeeks = [];
   if (!store.houseCents) store.houseCents = 0;
-  if (store.chargesLive === undefined) store.chargesLive = false;
-  if (store.chargesLiveAt === undefined) store.chargesLiveAt = null;
-  for (const user of store.users) {
-    if (user.paypalEmail === undefined) user.paypalEmail = "";
+  if (store.foundingPassCount === undefined) store.foundingPassCount = 0;
+  if (store.weeklyGiveaway === undefined) store.weeklyGiveaway = null;
+  if (stripDemoPlaceholders(store)) {
+    store.chargesLive = true;
+    store.chargesLiveAt = store.chargesLiveAt || new Date().toISOString();
+    persistAfterMigrate = true;
   }
-  for (const payout of store.payouts) {
-    if (payout.paypalEmail === undefined) payout.paypalEmail = "";
+  if (store.chargesLive === undefined) {
+    store.chargesLive = true;
+    persistAfterMigrate = true;
+  }
+  if (store.chargesLiveAt === undefined) store.chargesLiveAt = store.chargesLive ? new Date().toISOString() : null;
+  for (const user of store.users) {
+    if (user.freePasses === undefined) user.freePasses = 0;
+    if (user.earnedFoundingPass === undefined) user.earnedFoundingPass = false;
+    if (!user.links) user.links = { ...EMPTY_LINKS };
+  }
+  for (const vote of store.votes) {
+    if (vote.userId === undefined) vote.userId = null;
+  }
+  ensureWeeklyGiveaway(store);
+  if (store.chargesLive) {
+    for (const entry of store.entries) {
+      const sid = String(entry.stripeSessionId || "");
+      const realPay = sid.startsWith("cs_") || sid === "demo";
+      if (!realPay) {
+        entry.potCents = 0;
+        entry.houseCents = 0;
+        entry.feeCents = 0;
+      }
+    }
   }
   for (const entry of store.entries) {
-    if (entry.arena !== "blind" && entry.arena !== "tracks" && entry.arena !== "screen") {
-      entry.arena = "tracks";
-    }
+    entry.arena = migrateArena(entry.arena, entry.screenKind);
+    if (!entry.links) entry.links = { ...EMPTY_LINKS };
+    if (entry.fanCents === undefined) entry.fanCents = 0;
     if (entry.houseCents === undefined || entry.feeCents === undefined) {
       const split = splitEntry(entry.arena);
       entry.houseCents = split.houseCents;
@@ -91,38 +215,88 @@ function migrate(store: Store): Store {
     }
   }
   const current = isoWeekId();
+  ensureFanWeek(store, current);
+  const prev = previousWeekId(current);
+  const hadPrevFan = store.entries.some((e) => e.weekId === prev && e.status === "paid");
+  if (hadPrevFan) {
+    ensureFanWeek(store, prev);
+    closeFanWeekIfDue(store, prev);
+  }
   for (const arena of ARENAS) {
     ensureWeek(store, arena, current);
-    const prev = previousWeekId(current);
     const hadPrev = store.entries.some((e) => e.arena === arena && e.weekId === prev && e.status === "paid");
     if (hadPrev) {
       ensureWeek(store, arena, prev);
       closeWeekIfDue(store, arena, prev);
     }
     const week = store.weeks.find((w) => w.id === current && w.arena === arena)!;
-    week.potCents = liveEntries(store, arena, current).reduce((sum, e) => sum + e.potCents, 0);
+    week.potCents = cappedPot(liveEntries(store, arena, current).reduce((sum, e) => sum + e.potCents, 0));
     week.entryCount = liveEntries(store, arena, current).length;
+  }
+  const fan = store.fanWeeks.find((w) => w.weekId === current);
+  if (fan && fan.status === "open") {
+    fan.potCents = cappedPot(
+      store.entries.filter((e) => e.weekId === current && e.status === "paid").reduce((s, e) => s + (e.fanCents || 0), 0),
+    );
   }
   return store;
 }
 
 async function load(): Promise<Store> {
-  if (memory) return memory;
+  if (memory) {
+    migrate(memory);
+    if (persistAfterMigrate) {
+      persistAfterMigrate = false;
+      await persist(memory);
+    }
+    return memory;
+  }
   try {
-    const raw = await fs.readFile(filePath(), "utf8");
+    let raw: string | null = await readBlobJson();
+    if (!raw) {
+      try {
+        raw = await fs.readFile(filePath(), "utf8");
+      } catch {
+        if (process.env.VERCEL) {
+          try {
+            raw = await fs.readFile(seedPath(), "utf8");
+          } catch {
+            raw = null;
+          }
+        } else {
+          raw = null;
+        }
+      }
+    }
+    if (!raw) throw new Error("no store");
     memory = migrate(JSON.parse(raw) as Store);
+    if (persistAfterMigrate) {
+      persistAfterMigrate = false;
+      await persist(memory);
+    } else if (blobEnabled()) {
+      // Ensure blob has a copy even when we loaded from local/seed.
+      await writeBlobJson(JSON.stringify(memory));
+    }
   } catch {
     memory = migrate(await seedStore(emptyStore()));
+    persistAfterMigrate = false;
     await persist(memory);
   }
   return memory;
 }
 
 async function persist(store: Store) {
+  const json = JSON.stringify(store, null, 2);
+  await writeBlobJson(json);
   await fs.mkdir(path.dirname(filePath()), { recursive: true });
-  const tmp = `${filePath()}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(store, null, 2), "utf8");
-  await fs.rename(tmp, filePath());
+  const dest = filePath();
+  const tmp = `${dest}.${process.pid}.${Date.now()}.tmp`;
+  await fs.writeFile(tmp, json, "utf8");
+  try {
+    await fs.copyFile(tmp, dest);
+  } finally {
+    await fs.unlink(tmp).catch(() => undefined);
+  }
 }
 
 export async function readStore() {
@@ -144,11 +318,17 @@ export async function updateStore<T>(fn: (store: Store) => T | Promise<T>): Prom
   return run;
 }
 
+export function currentFanWeek(store: Store): FanWeek {
+  return ensureFanWeek(store, isoWeekId());
+}
+
 export function currentWeeks(store: Store): Record<Arena, Week> {
   const id = isoWeekId();
   return {
     blind: ensureWeek(store, "blind", id),
     tracks: ensureWeek(store, "tracks", id),
-    screen: ensureWeek(store, "screen", id),
+    film: ensureWeek(store, "film", id),
+    video: ensureWeek(store, "video", id),
+    creator: ensureWeek(store, "creator", id),
   };
 }

@@ -79,6 +79,70 @@ select:focus {
   @apply btn bg-white/5 text-paper hover:bg-white/10;
 }
 
+.live-glow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid rgba(80, 255, 140, 0.65);
+  background: rgba(8, 40, 18, 0.92);
+  color: #b6ffcc;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 10px rgba(60, 255, 130, 0.45),
+    0 0 28px rgba(60, 255, 130, 0.28),
+    inset 0 0 12px rgba(80, 255, 140, 0.12);
+  animation: live-pulse 1.7s ease-in-out infinite;
+}
+
+.live-glow .live-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #3dff7a;
+  box-shadow: 0 0 8px #3dff7a, 0 0 16px rgba(61, 255, 122, 0.8);
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(60, 255, 130, 0.35),
+      0 0 18px rgba(60, 255, 130, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(60, 255, 130, 0.85),
+      0 0 36px rgba(60, 255, 130, 0.4);
+  }
+}
+
+.live-off {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(20, 20, 22, 0.9);
+  color: rgba(243, 234, 216, 0.55);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.live-off .live-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #6b6b6b;
+}
+
 .btn-pass {
   @apply btn border border-white/15 text-mist hover:border-white/40 hover:text-paper;
 }
@@ -88,7 +152,7 @@ select:focus {
   pointer-events: none;
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 1;
   opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
 }

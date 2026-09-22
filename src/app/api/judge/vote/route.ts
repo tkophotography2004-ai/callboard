@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { clientIp, json } from "@/lib/api";
+import { getSessionUser } from "@/lib/auth";
 import { keepRate, scoutTotal } from "@/lib/ranking";
 import { updateStore } from "@/lib/store";
 import { getOrCreateVoterId, hashIp } from "@/lib/voter";
@@ -10,12 +11,16 @@ export async function POST(req: Request) {
   const keep = Boolean(body.keep);
   const voterId = await getOrCreateVoterId();
   const ipHash = hashIp(clientIp(req));
+  const session = await getSessionUser();
 
   const result = await updateStore((store) => {
     const entry = store.entries.find((e) => e.id === entryId && e.status === "paid");
     if (!entry) throw new Error("That cut is gone.");
     const already = store.votes.find(
-      (v) => v.kind === "scout" && v.entryId === entryId && (v.voterId === voterId || v.ipHash === ipHash),
+      (v) =>
+        v.kind === "scout" &&
+        v.entryId === entryId &&
+        (v.voterId === voterId || v.ipHash === ipHash || (session && v.userId === session.id)),
     );
     if (already) throw new Error("You already judged this one.");
     store.votes.push({
@@ -24,6 +29,7 @@ export async function POST(req: Request) {
       kind: "scout",
       keep,
       voterId,
+      userId: session?.id || null,
       ipHash,
       createdAt: new Date().toISOString(),
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isAudioEmbed, parseEmbed } from "@/lib/embed";
 import { formatDuration } from "@/lib/format";
 import { HOOK_SECONDS, type Arena } from "@/lib/rules";
 
@@ -32,8 +33,9 @@ export default function MediaPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
+  const embed = parseEmbed(mediaPath);
   const video = isVideoPath(mediaPath);
-  const cap = Math.min(durationSeconds || HOOK_SECONDS, arena === "screen" ? 120 : HOOK_SECONDS);
+  const cap = Math.min(durationSeconds || HOOK_SECONDS, arena === "film" || arena === "video" || arena === "creator" ? 120 : HOOK_SECONDS);
 
   useEffect(() => {
     if (!autoPlay) return;
@@ -75,6 +77,31 @@ export default function MediaPlayer({
 
   const shown = Math.max(0, t - hookStartSeconds);
   const pct = cap ? Math.min(100, (shown / cap) * 100) : 0;
+
+  if (embed) {
+    const tall = embed.kind === "tiktok" || embed.kind === "instagram";
+    const audioEmbed = isAudioEmbed(embed.kind);
+    const frameClass = audioEmbed
+      ? embed.kind === "spotify"
+        ? "h-[352px] w-full"
+        : "h-[166px] w-full sm:h-[300px]"
+      : "h-full w-full";
+    return (
+      <div
+        className={`relative overflow-hidden bg-ink-900 ${
+          audioEmbed ? "" : tall ? "aspect-[9/16] max-h-[70vh]" : "aspect-video"
+        }`}
+      >
+        <iframe
+          src={embed.src}
+          title="Linked cut"
+          className={frameClass}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden bg-ink-900">

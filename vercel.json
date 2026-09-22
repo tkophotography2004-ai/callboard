@@ -1,3 +1,7 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    { "source": "/scroll-call", "destination": "/", "permanent": false },
+    { "source": "/scroll-call/:path*", "destination": "/:path*", "permanent": false }
+  ]
 }

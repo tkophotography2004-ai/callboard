@@ -6,3 +6,6 @@ data/media
 .env
 .env.local
 *.tsbuildinfo
+
+.vercel
+.env*

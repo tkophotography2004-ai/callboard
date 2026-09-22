@@ -1,7 +1,9 @@
 import { assetUrl } from "./config";
-import { MIN_SCOUT_VOTES, PRICE, type Arena } from "./rules";
-import { boardPlaces, cutScore, keepRate, liveEntries, scoutTotal } from "./ranking";
-import { currentWeeks, readStore } from "./store";
+import { cappedPot } from "./money";
+import { EMPTY_LINKS, type ArtistLinks } from "./types";
+import { ARENAS, FOUNDING_PASS_LIMIT, MIN_SCOUT_VOTES, PRICE, type Arena } from "./rules";
+import { boardPlaces, cutScore, fanPlaces, featuredPlaces, keepRate, liveEntries, scoutTotal } from "./ranking";
+import { currentFanWeek, currentWeeks, readStore } from "./store";
 import type { Entry, Store } from "./types";
 import { formatCountdown, isoWeekId, msUntilWeekEnd, weekLabel } from "./week";
 
@@ -28,13 +30,22 @@ export type PublicEntry = {
   sample: number;
   qualified: boolean;
   playCount: number;
+  links: ArtistLinks | null;
 };
+
+export function entryIsCrowned(store: Store, entry: Entry) {
+  const week = store.weeks.find((w) => w.id === entry.weekId && w.arena === entry.arena);
+  if (!week || week.status !== "closed") return false;
+  if (week.cutWinnerIds?.includes(entry.id)) return true;
+  return featuredPlaces(liveEntries(store, entry.arena, entry.weekId)).some((p) => p.entry.id === entry.id);
+}
 
 export function toPublic(store: Store, entry: Entry): PublicEntry {
   const user = store.users.find((u) => u.id === entry.userId);
   const sample = scoutTotal(entry);
   const week = store.weeks.find((w) => w.id === entry.weekId && w.arena === entry.arena);
   const hiddenArtist = entry.arena === "blind" && week?.status !== "closed";
+  const crowned = entryIsCrowned(store, entry);
   return {
     id: entry.id,
     slug: entry.slug,
@@ -58,17 +69,16 @@ export function toPublic(store: Store, entry: Entry): PublicEntry {
     sample,
     qualified: sample >= MIN_SCOUT_VOTES,
     playCount: entry.playCount,
+    links: crowned ? entry.links || { ...EMPTY_LINKS } : null,
   };
 }
 
 export function entriesInWindow(store: Store, userId: string, arena: Arena, now = Date.now()) {
   const since = now - 24 * 3600 * 1000;
-  const floor = arena !== "blind";
   return store.entries.filter((e) => {
     if (e.userId !== userId || e.status === "removed") return false;
     if (Date.parse(e.createdAt) < since) return false;
-    if (floor) return e.arena === "tracks" || e.arena === "screen";
-    return e.arena === "blind";
+    return e.arena === arena;
   }).length;
 }
 
@@ -84,9 +94,10 @@ export async function homeData() {
   const weekId = isoWeekId();
   const boardFor = (arena: Arena) => {
     const live = liveEntries(store, arena, weekId);
-    const rawPot = weeks[arena].potCents || live.reduce((s, e) => s + e.potCents, 0);
+    const rawPot = weeks[arena]?.potCents || live.reduce((s, e) => s + e.potCents, 0);
+    const potCents = store.chargesLive ? cappedPot(rawPot) : 0;
     return {
-      potCents: store.chargesLive ? rawPot : 0,
+      potCents,
       houseCents: store.chargesLive ? live.reduce((s, e) => s + (e.houseCents || 0), 0) : 0,
       count: live.length,
       board: boardPlaces(live)
@@ -94,14 +105,47 @@ export async function homeData() {
         .map((p) => ({ ...p, public: toPublic(store, p.entry) })),
     };
   };
+  const lounges = Object.fromEntries(ARENAS.map((arena) => [arena, boardFor(arena)])) as Record<
+    Arena,
+    ReturnType<typeof boardFor>
+  >;
+  const fanWeek = currentFanWeek(store);
+  const toFan = (row: ReturnType<typeof fanPlaces>[number]) => ({
+    rank: row.rank,
+    displayName: row.user.displayName,
+    username: row.user.username,
+    votes: row.votes,
+    links: row.user.links || { ...EMPTY_LINKS },
+  });
+  const lastFan = [...(store.fanWeeks || [])]
+    .filter((w) => w.status === "closed")
+    .sort((a, b) => Date.parse(b.closedAt || b.openedAt) - Date.parse(a.closedAt || a.openedAt))[0];
+  const featuredFans = lastFan
+    ? fanPlaces(store, lastFan.weekId)
+        .slice(0, 3)
+        .map(toFan)
+    : [];
   return {
     weekId,
     weekLabel: weekLabel(weekId),
     countdown: formatCountdown(msUntilWeekEnd(weekId)),
-    blind: boardFor("blind"),
-    tracks: boardFor("tracks"),
-    screen: boardFor("screen"),
+    ...lounges,
     houseCents: store.chargesLive ? store.houseCents || 0 : 0,
     chargesLive: Boolean(store.chargesLive),
+    foundingPassCount: store.foundingPassCount || 0,
+    foundingPassLimit: FOUNDING_PASS_LIMIT,
+    weeklyGiveaway: store.weeklyGiveaway,
+    fanPotCents: store.chargesLive ? cappedPot(fanWeek.potCents || 0) : 0,
+    fanLeaders: fanPlaces(store, weekId).slice(0, 3).map(toFan),
+    featuredFans,
+    featuredFanWeekId: lastFan?.weekId || null,
   };
 }
+
+export type PublicFan = {
+  rank: number;
+  displayName: string;
+  username: string;
+  votes: number;
+  links: ArtistLinks;
+};
