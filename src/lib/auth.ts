@@ -51,6 +51,7 @@ export function toSession(user: User): SessionUser {
     displayName: user.displayName,
     role: user.role,
     cashtag: user.cashtag,
+    paypalEmail: user.paypalEmail || "",
   };
 }
 
