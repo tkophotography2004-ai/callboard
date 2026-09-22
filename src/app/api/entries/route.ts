@@ -42,7 +42,6 @@ export async function POST(req: Request) {
   const coverFile = cover instanceof File && cover.size > 0 ? cover : null;
   const sourceUrl = String(data.get("sourceUrl") || "").trim();
   const usePass = String(data.get("useFreePass") || "") === "1";
-  const audio = isAudioLounge(arena);
   const embed = parseEmbed(sourceUrl);
 
   if (!title) return json({ error: "Add a title." }, 400);
@@ -52,10 +51,10 @@ export async function POST(req: Request) {
     return json({ error: "Paste a link instead of uploading a file." }, 400);
   }
   if (!embed) {
-    return json({ error: sourceUrl ? `That link is not supported. ${linkHelp(audio)}` : linkHelp(audio) }, 400);
+    return json({ error: sourceUrl ? `That link is not supported. ${linkHelp(arena)}` : linkHelp(arena) }, 400);
   }
-  if (!embedAllowed(embed, audio)) {
-    return json({ error: `That site is not allowed in this lounge. ${linkHelp(audio)}` }, 400);
+  if (!embedAllowed(embed, arena)) {
+    return json({ error: `That site is not allowed in this lounge. ${linkHelp(arena)}` }, 400);
   }
 
   const coverPath = "/seed/hero.jpg";
