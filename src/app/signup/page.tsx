@@ -13,8 +13,8 @@ export default async function SignupPage({
       <p className="eyebrow">Artists & filmmakers</p>
       <h1 className="display mt-3 text-5xl">Join Callboard</h1>
       <p className="mt-4 text-mist">
-        Valid email. Cash App or PayPal for winnings (PayPal helps outside the US). Blind is $20 with your name off.
-        Tracks and videos are $5.
+        Valid email. Cash App and PayPal are optional for winnings (add later in Studio — PayPal helps outside the
+        US). Blind is $20 with your name off. Tracks and videos are $5.
       </p>
       <AuthForm mode="signup" next={next || "/enter"} />
     </div>
