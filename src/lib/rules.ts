@@ -209,7 +209,7 @@ export function potCapLine(at = Date.now()) {
 export const POT_CAP_LINE = potCapLine();
 
 export const LINK_ONLY_LINE =
-  "Paste a link. Music: YouTube, SoundCloud, Spotify, or Audiomack. Film, music videos, and Creator: YouTube, TikTok, Instagram, or Vimeo.";
+  "Paste a link. Blind: YouTube, SoundCloud, Spotify, Audiomack, or TikTok. Track: those plus Instagram. Film, music videos, and Creator: YouTube, TikTok, Instagram, or Vimeo.";
 
 export const FILE_LIMIT_LINE = LINK_ONLY_LINE;
 
