@@ -10,7 +10,7 @@ export type User = {
   displayName: string;
   role: Role;
   cashtag: string;
-  /** PayPal email for winnings (optional; at least one of cashtag or paypalEmail required). */
+  /** PayPal email for winnings (optional). */
   paypalEmail: string;
   bio: string;
   createdAt: string;

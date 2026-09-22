@@ -83,7 +83,7 @@ export function normalizePaypalEmail(raw: string) {
   return email;
 }
 
-/** True when the user has at least one usable payout method. */
+/** True when the user has a Cash App cashtag and/or PayPal email on file. */
 export function hasPayoutMethod(cashtag: string, paypalEmail: string) {
   return Boolean(cashtag || paypalEmail);
 }
