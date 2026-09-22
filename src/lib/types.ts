@@ -10,6 +10,8 @@ export type User = {
   displayName: string;
   role: Role;
   cashtag: string;
+  /** PayPal email for winnings (optional; at least one of cashtag or paypalEmail required). */
+  paypalEmail: string;
   bio: string;
   createdAt: string;
 };
@@ -21,6 +23,7 @@ export type SessionUser = {
   displayName: string;
   role: Role;
   cashtag: string;
+  paypalEmail: string;
 };
 
 export type EntryStatus = "draft" | "paid" | "removed";
@@ -89,6 +92,7 @@ export type Payout = {
   entryId: string;
   userId: string;
   cashtag: string;
+  paypalEmail: string;
   amountCents: number;
   status: PayoutStatus;
   sentAt: string | null;
