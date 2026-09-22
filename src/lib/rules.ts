@@ -70,8 +70,22 @@ export function formatUsd(cents: number) {
 
 export function normalizeCashtag(raw: string) {
   const t = raw.trim().replace(/^\$/, "");
+  if (!t) return "";
   if (!/^[A-Za-z][A-Za-z0-9_-]{2,19}$/.test(t)) return null;
   return `$${t}`;
+}
+
+/** Trim + lowercase; empty stays "". Invalid non-empty returns null. */
+export function normalizePaypalEmail(raw: string) {
+  const email = raw.trim().toLowerCase();
+  if (!email) return "";
+  if (!emailOk(email)) return null;
+  return email;
+}
+
+/** True when the user has at least one usable payout method. */
+export function hasPayoutMethod(cashtag: string, paypalEmail: string) {
+  return Boolean(cashtag || paypalEmail);
 }
 
 export function emailOk(email: string) {
