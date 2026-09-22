@@ -76,8 +76,8 @@ export default function HowPage() {
           <p className="mt-3">
             Named lounges. Your name is on the page. You can share the link. Share count is shown. It never ranks the
             pot. Keep / Pass still decides the money. Track lounge: paste YouTube, SoundCloud, Spotify, or Audiomack.
-            Film and music videos: paste YouTube, TikTok, Instagram, or Vimeo (under 2 minutes). File uploads are off
-            until the house buys storage. Each lounge has its own pot. Three entries per lounge per 24 hours.
+            Film and music videos: paste YouTube, TikTok, Instagram, or Vimeo (under 2 minutes). Paste a link — it
+            plays on Scroll Call®. Each lounge has its own pot. Three entries per lounge per 24 hours.
           </p>
           <p className="mt-3">
             {namedLoungesAreFree()
@@ -174,4 +174,3 @@ export default function HowPage() {
     </div>
   );
 }
-
