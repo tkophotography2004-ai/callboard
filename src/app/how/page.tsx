@@ -60,8 +60,8 @@ export default function HowPage() {
         <section>
           <h2 className="display text-2xl text-paper">Blind — $30 · music only</h2>
           <p className="mt-3">
-            This is the talent test for music artists. Paste a YouTube, SoundCloud, Spotify, or Audiomack link. Your
-            name, page, and following are stripped off until the week closes. The title stays; the artist does not.
+            This is the talent test for music artists. Paste a YouTube, SoundCloud, Spotify, Audiomack, or TikTok link.
+            Your name, page, and following are stripped off until the week closes. The title stays; the artist does not.
             Nobody can campaign “vote for me.” They can only vote for the sound. One Blind entry per 24 hours.
           </p>
           <p className="mt-3">
@@ -75,9 +75,9 @@ export default function HowPage() {
           </h2>
           <p className="mt-3">
             Named lounges. Your name is on the page. You can share the link. Share count is shown. It never ranks the
-            pot. Keep / Pass still decides the money. Track lounge: paste YouTube, SoundCloud, Spotify, or Audiomack.
-            Film and music videos: paste YouTube, TikTok, Instagram, or Vimeo (under 2 minutes). Paste a link — it
-            plays on Scroll Call®. Each lounge has its own pot. Three entries per lounge per 24 hours.
+            pot. Keep / Pass still decides the money. Track lounge: paste YouTube, SoundCloud, Spotify, Audiomack,
+            TikTok, or Instagram. Film and music videos: paste YouTube, TikTok, Instagram, or Vimeo (under 2 minutes).
+            Paste a link — it plays on Scroll Call®. Each lounge has its own pot. Three entries per lounge per 24 hours.
           </p>
           <p className="mt-3">
             {namedLoungesAreFree()
