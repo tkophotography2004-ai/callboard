@@ -22,7 +22,7 @@ export default async function EnterPage() {
           Film / Music Video / Creator — YouTube, TikTok, Instagram, or Vimeo. Keep / Pass ranks the work, not clicks.
           Valid email required. Cash App or PayPal optional — add in Studio anytime so you are ready when the pot opens.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex gap-3">
           <Link href="/signup?next=/enter" className="btn-copper">
             Create account
           </Link>
