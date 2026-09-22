@@ -1,12 +1,28 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import BoardList from "@/components/BoardList";
-import { formatUsd, splitEntry } from "@/lib/rules";
+import BrandMark from "@/components/BrandMark";
+import FeaturedFans from "@/components/FeaturedFans";
+import LiveBadge from "@/components/LiveBadge";
+import PromoBanner from "@/components/PromoBanner";
+import {
+  ARENAS,
+  ARENA_LABEL,
+  FAN_POT_LINE,
+  LIMITS_LINE,
+  NAMED_LOUNGES_FREE,
+  namedPriceLine,
+  namedPriceSentence,
+  NOTHING_LIKE_THIS,
+  PAYDAY_LINE,
+  potCapLine,
+  formatUsd,
+
+} from "@/lib/rules";
+import { APP_CREDIT } from "@/lib/config";
 import { homeData } from "@/lib/queries";
 
 export default async function HomePage() {
   const data = await homeData();
-  const blind = splitEntry("blind");
-  const floor = splitEntry("tracks");
 
   return (
     <>
@@ -15,20 +31,30 @@ export default async function HomePage() {
         <img src="/seed/hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-hero-fade" />
         <div className="relative mx-auto flex min-h-[78dvh] max-w-6xl flex-col justify-end px-4 pb-14 pt-24">
-          <p className="eyebrow">This week · {data.weekLabel}</p>
+          <p className="display text-5xl leading-none sm:text-6xl">
+            <BrandMark />
+          </p>
+          <p className="mt-2 text-sm uppercase tracking-[0.22em] text-paper/70">{APP_CREDIT}</p>
+          <div className="mt-5">
+            <LiveBadge live={data.chargesLive} href="/enter" size="lg" />
+          </div>
+          <p className="eyebrow mt-8">This week · {data.weekLabel}</p>
           <h1 className="display mt-4 max-w-3xl text-5xl leading-[0.95] sm:text-7xl">
             The name comes off.
             <br />
             The record stays on.
           </h1>
           <p className="mt-5 max-w-xl text-base text-paper/80">
-            {data.chargesLive
-              ? "Blind is $20. Strangers Keep or Pass with your name locked. Clicks cannot buy it. Tracks and videos are $5 — still ranked by ears, not followers. Winners paid on Cash App."
-              : "The cash pot is off while the board fills. Enter free. Judge for real. When enough artists are in, the house turns on $20 Blind and $5 tracks/videos."}
+            Blind is $30 — music tracks only. Track, Film, Music Video, and Creator lounges are{" "}
+            {namedPriceSentence()}. Strangers Keep or Pass. Clicks cannot buy first place.{" "}
+            {FAN_POT_LINE}
+          </p>
+          <p className="mt-3 max-w-xl text-sm text-paper/70">
+            {potCapLine()} {PAYDAY_LINE} {LIMITS_LINE}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/judge?arena=blind" className="btn-copper">
-              Judge Blind
+              Judge and earn
             </Link>
             <Link href="/enter" className="btn-ghost">
               Enter
@@ -43,42 +69,74 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-3">
-        <Link href="/board/blind" className="border border-copper-400/40 p-6 hover:border-copper-300">
-          <p className="eyebrow">{data.chargesLive ? "Blind pot · $20" : "Blind · founding"}</p>
-          <p className="display mt-3 text-4xl text-copper-200">
-            {data.chargesLive ? formatUsd(data.blind.potCents) : `${data.blind.count} in`}
+      <PromoBanner
+        foundingPassCount={data.foundingPassCount}
+        foundingPassLimit={data.foundingPassLimit}
+        weeklyGiveaway={data.weeklyGiveaway}
+      />
+
+      <section className="mx-auto max-w-6xl px-4 py-6">
+        <div className="border border-copper-400/40 bg-black/40 p-6 sm:p-8">
+          <p className="eyebrow">Fan pot · this week</p>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+            <h2 className="display text-4xl sm:text-5xl">Judge. Earn. Come back.</h2>
+            <p className="display text-4xl text-copper-200">{formatUsd(data.fanPotCents)}</p>
+          </div>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-mist">
+            {FAN_POT_LINE} Sign in, Keep or Pass, and keep a Cash App cashtag in Studio. Top fans of the week get paid
+            and a featured spot with their socials.
           </p>
-          <p className="mt-2 text-sm text-mist">
-            {data.chargesLive
-              ? `${data.blind.count} anonymous cuts · names off until Sunday`
-              : "Anonymous cuts · pot opens when the house flips it on"}
-          </p>
-        </Link>
-        <Link href="/board/tracks" className="border border-white/10 p-6 hover:border-copper-400/50">
-          <p className="eyebrow">{data.chargesLive ? "Tracks pot · $5" : "Tracks · founding"}</p>
-          <p className="display mt-3 text-4xl text-copper-200">
-            {data.chargesLive ? formatUsd(data.tracks.potCents) : `${data.tracks.count} in`}
-          </p>
-          <p className="mt-2 text-sm text-mist">
-            {data.chargesLive ? `${data.tracks.count} named tracks this week` : "Named tracks · free while the pot is off"}
-          </p>
-        </Link>
-        <Link href="/board/screen" className="border border-white/10 p-6 hover:border-copper-400/50">
-          <p className="eyebrow">{data.chargesLive ? "Videos pot · $5" : "Videos · founding"}</p>
-          <p className="display mt-3 text-4xl text-copper-200">
-            {data.chargesLive ? formatUsd(data.screen.potCents) : `${data.screen.count} in`}
-          </p>
-          <p className="mt-2 text-sm text-mist">
-            {data.chargesLive ? `${data.screen.count} videos under 2 minutes` : "Under 2 minutes · free while the pot is off"}
-          </p>
-        </Link>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/judge?arena=blind" className="btn-copper">
+              Start judging
+            </Link>
+            <Link href="/signup?next=/judge" className="btn-ghost">
+              Sign up as a fan
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-8 lg:grid-cols-2">
+            <FeaturedFans
+              title="Leading fans this week"
+              fans={data.fanLeaders}
+              empty="No signed-in fans have judged yet. Be first."
+            />
+            <FeaturedFans
+              title="Featured fans"
+              weekId={data.featuredFanWeekId}
+              fans={data.featuredFans}
+              empty="Last week’s top fans appear here after Sunday’s crown, with their socials."
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 lg:grid-cols-5">
+        {ARENAS.map((arena) => {
+          const lounge = data[arena];
+          const price = arena === "blind" ? "$30" : namedPriceLine();
+          return (
+            <a
+              key={arena}
+              href={`/board/${arena}`}
+              className={`block border p-6 ${
+                arena === "blind"
+                  ? "border-copper-400/40 hover:border-copper-300"
+                  : "border-white/10 hover:border-copper-400/50"
+              }`}
+            >
+              <p className="eyebrow">{`${ARENA_LABEL[arena]} · ${price}`}</p>
+              <p className="display mt-3 text-4xl text-copper-200">{formatUsd(lounge.potCents)}</p>
+              <p className="mt-2 text-sm text-mist">{`${lounge.count} in this week`}</p>
+            </a>
+          );
+        })}
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-6">
         <div className="gold-line mb-10" />
         <p className="eyebrow">The Cut</p>
         <h2 className="display mt-2 text-3xl">Blind this week</h2>
+        <p className="mt-2 text-sm text-mist">Music tracks only. Name locked until Sunday.</p>
         <BoardList rows={data.blind.board} hideHeat />
         <Link href="/board/blind" className="btn-ghost mt-5">
           Full Blind board
@@ -86,21 +144,37 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <div className="grid gap-12 lg:grid-cols-2">
+        <div className="grid gap-12 sm:grid-cols-2">
           <div>
-            <p className="eyebrow">$5</p>
-            <h2 className="display mt-2 text-3xl">Tracks</h2>
+            <p className="eyebrow">{namedPriceLine()}</p>
+            <h2 className="display mt-2 text-3xl">Track Lounge</h2>
             <BoardList rows={data.tracks.board} />
             <Link href="/board/tracks" className="btn-ghost mt-5">
-              Full tracks board
+              Full track board
             </Link>
           </div>
           <div>
-            <p className="eyebrow">$5</p>
-            <h2 className="display mt-2 text-3xl">Videos</h2>
-            <BoardList rows={data.screen.board} />
-            <Link href="/board/screen" className="btn-ghost mt-5">
-              Full video board
+            <p className="eyebrow">{namedPriceLine()}</p>
+            <h2 className="display mt-2 text-3xl">Film Lounge</h2>
+            <BoardList rows={data.film.board} />
+            <Link href="/board/film" className="btn-ghost mt-5">
+              Full film board
+            </Link>
+          </div>
+          <div>
+            <p className="eyebrow">{namedPriceLine()}</p>
+            <h2 className="display mt-2 text-3xl">Music Video Lounge</h2>
+            <BoardList rows={data.video.board} />
+            <Link href="/board/video" className="btn-ghost mt-5">
+              Full music video board
+            </Link>
+          </div>
+          <div>
+            <p className="eyebrow">{namedPriceLine()} · link your video</p>
+            <h2 className="display mt-2 text-3xl">Creator Lounge</h2>
+            <BoardList rows={data.creator.board} />
+            <Link href="/board/creator" className="btn-ghost mt-5">
+              Full creator board
             </Link>
           </div>
         </div>
@@ -112,27 +186,24 @@ export default async function HomePage() {
         <div className="mt-10 grid gap-8 md:grid-cols-3">
           <div>
             <p className="text-copper-300">01</p>
-            <h3 className="display mt-2 text-2xl">Play it first</h3>
+            <h3 className="display mt-2 text-2xl">Fans judge first</h3>
             <p className="mt-3 text-sm leading-relaxed text-mist">
-              Scouts hear a short preview. Then Keep or Pass. A view-count contest lets bots, group chats, and big
-              pages farm first place without listening.
+              Play the preview. Keep or Pass. That vote ranks the artist pot and counts toward the fan pot. {FAN_POT_LINE}
             </p>
           </div>
           <div>
             <p className="text-copper-300">02</p>
             <h3 className="display mt-2 text-2xl">Blind locks the name</h3>
             <p className="mt-3 text-sm leading-relaxed text-mist">
-              On the $20 board the artist is hidden until the week closes. You cannot vote for a famous account. You
-              vote for the record. That is why people will pay $20 instead of $40 for a written “review.”
+              Blind is $30 and music only. The artist is hidden until the week closes. You vote for the record.{" "}
+              {NOTHING_LIKE_THIS}
             </p>
           </div>
           <div>
             <p className="text-copper-300">03</p>
-            <h3 className="display mt-2 text-2xl">The house stays open</h3>
+            <h3 className="display mt-2 text-2xl">The pot, then payday</h3>
             <p className="mt-3 text-sm leading-relaxed text-mist">
-              Blind: house keeps {formatUsd(blind.houseCents)}, about {formatUsd(blind.feeCents)} to Stripe,{" "}
-              {formatUsd(blind.potCents)} in the pot. $5 boards: house keeps {formatUsd(floor.houseCents)},{" "}
-              {formatUsd(floor.potCents)} in the pot. Winners paid on Cash App.
+              {potCapLine()} {PAYDAY_LINE} {LIMITS_LINE}
             </p>
           </div>
         </div>
@@ -143,3 +214,4 @@ export default async function HomePage() {
     </>
   );
 }
+
