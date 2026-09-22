@@ -92,7 +92,7 @@ export function applyPayouts(
   store: Store,
   week: Week,
   entries: Entry[],
-  usersById: Map<string, { id: string; cashtag: string }>,
+  usersById: Map<string, { id: string; cashtag: string; paypalEmail?: string }>,
   now = new Date(),
 ): Payout[] {
   const plan = payoutPlan(entries, week.potCents);
@@ -107,6 +107,7 @@ export function applyPayouts(
       entryId: row.entry.id,
       userId: row.entry.userId,
       cashtag: artist?.cashtag || "",
+      paypalEmail: artist?.paypalEmail || "",
       amountCents: row.amountCents,
       status: "pending",
       sentAt: null,

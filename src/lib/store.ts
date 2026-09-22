@@ -73,6 +73,12 @@ function migrate(store: Store): Store {
   if (!store.houseCents) store.houseCents = 0;
   if (store.chargesLive === undefined) store.chargesLive = false;
   if (store.chargesLiveAt === undefined) store.chargesLiveAt = null;
+  for (const user of store.users) {
+    if (user.paypalEmail === undefined) user.paypalEmail = "";
+  }
+  for (const payout of store.payouts) {
+    if (payout.paypalEmail === undefined) payout.paypalEmail = "";
+  }
   for (const entry of store.entries) {
     if (entry.arena !== "blind" && entry.arena !== "tracks" && entry.arena !== "screen") {
       entry.arena = "tracks";

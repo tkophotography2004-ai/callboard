@@ -23,8 +23,6 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   const user = await requireUser();
   if (isResponse(user)) return user;
-  if (!user.cashtag) return json({ error: "Add a Cash App cashtag in Studio first." }, 400);
-
   const data = await req.formData();
   const arenaRaw = String(data.get("arena") || "tracks");
   const arena = isArena(arenaRaw) ? arenaRaw : "tracks";
