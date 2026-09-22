@@ -16,7 +16,7 @@ export default async function EnterPage() {
         <h1 className="display mt-3 text-5xl">Enter the board</h1>
         <p className="mt-4 text-mist">
           Blind hides your name. Tracks and videos are named. Keep / Pass ranks the work, not clicks. Valid email and
-          a Cash App cashtag required so you are ready when the pot opens.
+          Cash App or PayPal optional — add in Studio anytime so you are ready when the pot opens.
         </p>
         <div className="mt-8 flex gap-3">
           <Link href="/signup?next=/enter" className="btn-copper">
@@ -36,24 +36,28 @@ export default async function EnterPage() {
     tracks: remainingToday(store, user.id, "tracks"),
     screen: remainingToday(store, user.id, "screen"),
   };
+  const hasPayout = Boolean(user.cashtag || user.paypalEmail);
+  const payoutLabel =
+    [user.cashtag, user.paypalEmail ? `PayPal ${user.paypalEmail}` : ""].filter(Boolean).join(" · ") ||
+    "payout optional";
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
-      <p className="eyebrow">{user.cashtag}</p>
+      <p className="eyebrow">{payoutLabel}</p>
       <h1 className="display mt-3 text-5xl">Put it on the board</h1>
       <p className="mt-4 text-mist">
         {store.chargesLive
           ? "Blind is $20 because strangers cannot vote for a famous name. Tracks and videos are $5. Keep / Pass ranks both — clicks never buy first place."
           : "The cash pot is off while the board fills. Enter free. Same judging. When the house opens the pot, new Blind entries will be $20 and tracks/videos $5."}
       </p>
-      {!user.cashtag && (
-        <p className="mt-4 border border-copper-400/40 p-4 text-sm">
-          Add a Cash App cashtag in <Link href="/studio" className="text-copper-300">Studio</Link> before you can be
-          paid.
+      {!hasPayout && (
+        <p className="mt-4 border border-white/15 p-4 text-sm text-mist">
+          Tip: add Cash App or PayPal in <Link href="/studio" className="text-copper-300">Studio</Link> so Tina can
+          pay you if you place. Not required to enter.
         </p>
       )}
       <EnterForm
-        remaining={user.cashtag ? remaining : { blind: 0, tracks: 0, screen: 0 }}
+        remaining={remaining}
         stripeReady={stripeEnabled()}
         chargesLive={Boolean(store.chargesLive)}
       />

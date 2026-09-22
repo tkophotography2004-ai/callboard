@@ -21,6 +21,7 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
       body.displayName = String(data.get("displayName") || "");
       body.username = String(data.get("username") || "");
       body.cashtag = String(data.get("cashtag") || "");
+      body.paypalEmail = String(data.get("paypalEmail") || "");
     }
     const res = await fetch(signup ? "/api/auth/signup" : "/api/auth/login", {
       method: "POST",
@@ -57,10 +58,14 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
             <input name="username" required minLength={3} maxLength={20} className="mt-2" placeholder="novavale" />
           </label>
           <label className="block">
-            <span className="eyebrow">Cash App cashtag</span>
-            <input name="cashtag" required className="mt-2" placeholder="$YourTag" />
+            <span className="eyebrow">Cash App cashtag (optional)</span>
+            <input name="cashtag" className="mt-2" placeholder="$YourTag" />
+          </label>
+          <label className="block">
+            <span className="eyebrow">PayPal email (optional)</span>
+            <input name="paypalEmail" type="email" className="mt-2" placeholder="you@example.com" />
             <span className="mt-2 block text-xs text-white/40">
-              Winnings are sent here. You can change it later in Studio.
+              Optional — for winnings. PayPal helps outside the US. You can add or change either later in Studio.
             </span>
           </label>
         </>
