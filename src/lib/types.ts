@@ -34,6 +34,7 @@ export type SessionUser = {
 export type ArtistLinks = {
   instagram: string;
   tiktok: string;
+  facebook: string;
   youtube: string;
   spotify: string;
   appleMusic: string;
@@ -43,6 +44,7 @@ export type ArtistLinks = {
 export const EMPTY_LINKS: ArtistLinks = {
   instagram: "",
   tiktok: "",
+  facebook: "",
   youtube: "",
   spotify: "",
   appleMusic: "",

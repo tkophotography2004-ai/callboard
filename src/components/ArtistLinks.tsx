@@ -4,6 +4,7 @@ import { hasAnyLink } from "@/lib/format";
 const ITEMS: { key: keyof Links; label: string }[] = [
   { key: "instagram", label: "Instagram" },
   { key: "tiktok", label: "TikTok" },
+  { key: "facebook", label: "Facebook" },
   { key: "youtube", label: "YouTube" },
   { key: "spotify", label: "Spotify" },
   { key: "appleMusic", label: "Apple Music" },

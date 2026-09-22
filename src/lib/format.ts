@@ -59,6 +59,7 @@ export function readArtistLinks(data: FormData | Record<string, string>) {
   return {
     instagram: asUrl(get("instagram"), "https://instagram.com/"),
     tiktok: asUrl(get("tiktok"), "https://www.tiktok.com/@"),
+    facebook: asUrl(get("facebook"), "https://www.facebook.com/"),
     youtube: asUrl(get("youtube"), "https://youtube.com/"),
     spotify: asUrl(get("spotify"), "https://open.spotify.com/"),
     appleMusic: asUrl(get("appleMusic"), "https://music.apple.com/"),
@@ -66,7 +67,7 @@ export function readArtistLinks(data: FormData | Record<string, string>) {
   };
 }
 
-export function hasAnyLink(links?: { instagram?: string; tiktok?: string; youtube?: string; spotify?: string; appleMusic?: string; other?: string } | null) {
+export function hasAnyLink(links?: { instagram?: string; tiktok?: string; facebook?: string; youtube?: string; spotify?: string; appleMusic?: string; other?: string } | null) {
   if (!links) return false;
-  return Boolean(links.instagram || links.tiktok || links.youtube || links.spotify || links.appleMusic || links.other);
+  return Boolean(links.instagram || links.tiktok || links.facebook || links.youtube || links.spotify || links.appleMusic || links.other);
 }
