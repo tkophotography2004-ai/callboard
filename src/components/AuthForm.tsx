@@ -6,6 +6,7 @@ import Link from "next/link";
 export default function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: string }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const signup = mode === "signup";
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -43,10 +44,28 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
         <span className="eyebrow">Email</span>
         <input name="email" type="email" required autoComplete="email" className="mt-2" />
       </label>
-      <label className="block">
+      <div className="block">
         <span className="eyebrow">Password</span>
-        <input name="password" type="password" required minLength={8} autoComplete={signup ? "new-password" : "current-password"} className="mt-2" />
-      </label>
+        <div className="relative mt-2">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            minLength={8}
+            autoComplete={signup ? "new-password" : "current-password"}
+            className="w-full pr-20"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-2 my-auto h-8 rounded px-2 text-xs uppercase tracking-[0.14em] text-copper-300 hover:text-copper-200"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+      </div>
       {signup && (
         <>
           <label className="block">
