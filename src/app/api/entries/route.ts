@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { isResponse, json, requireUser } from "@/lib/api";
-import { embedAllowed, linkHelp, parseEmbed } from "@/lib/embed";
+import { embedAllowed, linkHelp, resolveAndParseEmbed } from "@/lib/embed";
 import { readArtistLinks, uniqueSlug } from "@/lib/format";
 import {
   PRICE,
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   const coverFile = cover instanceof File && cover.size > 0 ? cover : null;
   const sourceUrl = String(data.get("sourceUrl") || "").trim();
   const usePass = String(data.get("useFreePass") || "") === "1";
-  const embed = parseEmbed(sourceUrl);
+  const embed = await resolveAndParseEmbed(sourceUrl);
 
   if (!title) return json({ error: "Add a title." }, 400);
   if (!genre) return json({ error: "Add a genre." }, 400);
@@ -51,7 +51,18 @@ export async function POST(req: Request) {
     return json({ error: "Paste a link instead of uploading a file." }, 400);
   }
   if (!embed) {
-    return json({ error: sourceUrl ? `That link is not supported. ${linkHelp(arena)}` : linkHelp(arena) }, 400);
+    const shortHint =
+      /vm\.tiktok\.com|vt\.tiktok\.com|tiktok\.com\/t\//i.test(sourceUrl)
+        ? " If this is a TikTok share link, open it in TikTok, tap Share ? Copy link, and paste the full link that has /video/ and numbers."
+        : "";
+    return json(
+      {
+        error: sourceUrl
+          ? `That link is not supported.${shortHint} ${linkHelp(arena)}`
+          : linkHelp(arena),
+      },
+      400,
+    );
   }
   if (!embedAllowed(embed, arena)) {
     return json({ error: `That site is not allowed in this lounge. ${linkHelp(arena)}` }, 400);

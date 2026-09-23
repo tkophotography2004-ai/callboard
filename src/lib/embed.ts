@@ -59,7 +59,7 @@ export function parseEmbed(raw: string | null | undefined): ParsedEmbed | null {
       const id = u.pathname.replace(/^\//, "").slice(0, 20);
       if (id) return { kind: "youtube", id, src: `https://www.youtube.com/embed/${id}`, original: t };
     }
-    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com" || host === "youtube-nocookie.com") {
       const id = u.searchParams.get("v") || path.filter((p) => p !== "embed" && p !== "shorts" && p !== "live").pop() || "";
       const clean = id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 20);
       if (clean) return { kind: "youtube", id: clean, src: `https://www.youtube.com/embed/${clean}`, original: t };
@@ -125,6 +125,76 @@ export function parseEmbed(raw: string | null | undefined): ParsedEmbed | null {
           original: t,
         };
       }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+
+/** Short TikTok / share hosts that need a redirect to get /video/ID. */
+function isTikTokShortHost(host: string) {
+  return (
+    host === "vm.tiktok.com" ||
+    host === "vt.tiktok.com" ||
+    host === "m.tiktok.com" ||
+    host === "tiktok.com" ||
+    host.endsWith(".tiktok.com")
+  );
+}
+
+function looksLikeTikTokShort(raw: string) {
+  try {
+    const u = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
+    const host = u.hostname.replace(/^www\./, "");
+    if (host === "vm.tiktok.com" || host === "vt.tiktok.com") return true;
+    if (host === "tiktok.com" || host.endsWith(".tiktok.com")) {
+      // /t/XXXX share links, or missing /video/
+      if (u.pathname.startsWith("/t/")) return true;
+      if (!/\/video\/\d+/.test(u.pathname)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/** Follow one redirect chain (TikTok short links) then parse. */
+export async function resolveAndParseEmbed(raw: string | null | undefined): Promise<ParsedEmbed | null> {
+  const t = String(raw || "").trim();
+  if (!t) return null;
+  const direct = parseEmbed(t);
+  if (direct) return direct;
+  if (!looksLikeTikTokShort(t)) return null;
+  try {
+    const start = t.startsWith("http") ? t : `https://${t}`;
+    const res = await fetch(start, {
+      method: "GET",
+      redirect: "follow",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+    const finalUrl = res.url || start;
+    const parsed = parseEmbed(finalUrl);
+    if (parsed) return { ...parsed, original: t };
+    // Some TikTok responses keep short URL in res.url but put canonical in HTML
+    const html = await res.text();
+    const m =
+      html.match(/https?:\/\/www\.tiktok\.com\/@[^"'\s]+\/video\/(\d+)/) ||
+      html.match(/\/video\/(\d+)/);
+    if (m) {
+      const id = m[1];
+      return {
+        kind: "tiktok",
+        id,
+        src: `https://www.tiktok.com/embed/v2/${id}`,
+        original: t,
+      };
     }
   } catch {
     return null;

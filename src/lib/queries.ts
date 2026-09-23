@@ -76,7 +76,7 @@ export function toPublic(store: Store, entry: Entry): PublicEntry {
 export function entriesInWindow(store: Store, userId: string, arena: Arena, now = Date.now()) {
   const since = now - 24 * 3600 * 1000;
   return store.entries.filter((e) => {
-    if (e.userId !== userId || e.status === "removed") return false;
+    if (e.userId !== userId || e.status !== "paid") return false;
     if (Date.parse(e.createdAt) < since) return false;
     return e.arena === arena;
   }).length;
