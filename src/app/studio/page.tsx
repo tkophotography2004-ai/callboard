@@ -7,6 +7,7 @@ import { ARENAS, formatUsd } from "@/lib/rules";
 import { remainingToday, toPublic } from "@/lib/queries";
 import { fanPlaces } from "@/lib/ranking";
 import { EMPTY_LINKS } from "@/lib/types";
+import { unusedPassCodesForUser } from "@/lib/promo";
 import { readStore } from "@/lib/store";
 import { isoWeekId } from "@/lib/week";
 import StudioClient from "./ui";
@@ -23,6 +24,7 @@ export default async function StudioPage({
     beta?: string;
     pass?: string;
     usedpass?: string;
+    code?: string;
   }>;
 }) {
   const user = await getSessionUser();
@@ -45,6 +47,8 @@ export default async function StudioPage({
     }));
   const payouts = store.payouts.filter((p) => p.userId === user.id);
   const sp = await searchParams;
+  const passCodes = unusedPassCodesForUser(store, user.id);
+  const awardedCode = (sp.code || "").trim().toUpperCase();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
@@ -71,6 +75,20 @@ export default async function StudioPage({
       {sp.pass === "1" && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
           You earned a free submission. It is waiting here. Use it on any lounge, any later week.
+          {awardedCode ? (
+            <>
+              {" "}
+              <span className="mt-2 block font-mono text-base text-copper-200">
+                Your free submission code: {awardedCode} — use it next time on Enter.
+              </span>
+            </>
+          ) : null}
+        </p>
+      )}
+      {awardedCode && sp.pass !== "1" && (
+        <p className="mt-4 border border-copper-400/40 p-4 text-sm">
+          Your free submission code:{" "}
+          <span className="font-mono text-base text-copper-200">{awardedCode}</span> — use it next time on Enter.
         </p>
       )}
       {sp.usedpass === "1" && (
@@ -91,6 +109,13 @@ export default async function StudioPage({
       {(user.freePasses || 0) > 0 && (
         <p className="mt-3 text-sm text-copper-200">
           You have {user.freePasses} free {user.freePasses === 1 ? "pass" : "passes"} to use on a later submission.
+          {passCodes.length > 0 ? (
+            <>
+              {" "}
+              Code{passCodes.length === 1 ? "" : "s"}:{" "}
+              <span className="font-mono text-paper">{passCodes.join(", ")}</span> — paste on Enter.
+            </>
+          ) : null}
         </p>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
