@@ -1,4 +1,5 @@
 import { assetUrl } from "./config";
+import { homeMusicPlayable, type HomeMusicKind } from "./embed";
 import { cappedPot } from "./money";
 import { EMPTY_LINKS, type ArtistLinks } from "./types";
 import { ARENAS, FOUNDING_PASS_LIMIT, MIN_SCOUT_VOTES, PRICE, type Arena } from "./rules";
@@ -88,6 +89,41 @@ export function remainingToday(store: Store, userId: string, arena: Arena) {
   return Math.max(0, cap - used);
 }
 
+
+export type HomeMusicQueueItem = {
+  id: string;
+  slug: string;
+  title: string;
+  artist: string;
+  coverPath: string;
+  mediaPath: string;
+  durationSeconds: number;
+  kind: HomeMusicKind;
+};
+
+/** Current-week Music lounge entries that can embed/play in the home player. */
+export function buildMusicQueue(store: Store, weekId: string): HomeMusicQueueItem[] {
+  const live = liveEntries(store, "tracks", weekId);
+  const items: HomeMusicQueueItem[] = [];
+  for (const place of boardPlaces(live)) {
+    const entry = place.entry;
+    const playable = homeMusicPlayable(entry.mediaPath);
+    if (!playable || !entry.mediaPath) continue;
+    const pub = toPublic(store, entry);
+    items.push({
+      id: entry.id,
+      slug: entry.slug,
+      title: entry.title,
+      artist: pub.artist,
+      coverPath: pub.coverPath,
+      mediaPath: pub.mediaPath || entry.mediaPath,
+      durationSeconds: entry.durationSeconds,
+      kind: playable.kind,
+    });
+  }
+  return items;
+}
+
 export async function homeData() {
   const store = await readStore();
   const weeks = currentWeeks(store);
@@ -139,6 +175,7 @@ export async function homeData() {
     fanLeaders: fanPlaces(store, weekId).slice(0, 3).map(toFan),
     featuredFans,
     featuredFanWeekId: lastFan?.weekId || null,
+    musicQueue: buildMusicQueue(store, weekId),
   };
 }
 

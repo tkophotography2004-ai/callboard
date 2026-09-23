@@ -223,6 +223,57 @@ export async function resolveAndParseEmbed(raw: string | null | undefined): Prom
   return null;
 }
 
+
+/** Platforms reliable enough for the home Music playlist (skip TikTok/IG). */
+export const HOME_MUSIC_EMBED_KINDS = new Set<EmbedKind>([
+  "youtube",
+  "soundcloud",
+  "spotify",
+  "audiomack",
+]);
+
+export type HomeMusicKind = EmbedKind | "file";
+
+/** True when media can play in the home player without opening an external site. */
+export function homeMusicPlayable(
+  mediaPath: string | null | undefined,
+): { kind: HomeMusicKind; embed: ParsedEmbed | null } | null {
+  const t = String(mediaPath || "").trim();
+  if (!t) return null;
+  const embed = parseEmbed(t);
+  if (embed) {
+    if (!HOME_MUSIC_EMBED_KINDS.has(embed.kind)) return null;
+    return { kind: embed.kind, embed };
+  }
+  if (
+    t.startsWith("/api/media/") ||
+    t.startsWith("/seed/") ||
+    /\.(mp3|m4a|wav|ogg|aac|mp4|webm|mov)(\?|$)/i.test(t)
+  ) {
+    return { kind: "file", embed: null };
+  }
+  return null;
+}
+
+/** Embed iframe src; autoplay query only when caller already has play intent. */
+export function embedPlaybackSrc(embed: ParsedEmbed, autoplay: boolean): string {
+  if (embed.kind === "youtube") {
+    const base = `https://www.youtube.com/embed/${embed.id}`;
+    return autoplay ? `${base}?autoplay=1&rel=0` : `${base}?rel=0`;
+  }
+  if (embed.kind === "soundcloud") {
+    return embed.src.replace(/auto_play=(true|false)/, `auto_play=${autoplay ? "true" : "false"}`);
+  }
+  if (embed.kind === "spotify") {
+    // Spotify embeds generally ignore autoplay; still avoid any autoplay-like params on landing.
+    return embed.src;
+  }
+  if (embed.kind === "audiomack") {
+    return autoplay ? `${embed.src}?autoplay=true` : embed.src;
+  }
+  return embed.src;
+}
+
 export function isRemoteMedia(path: string | null | undefined) {
   const t = String(path || "");
   return t.startsWith("http://") || t.startsWith("https://") || Boolean(parseEmbed(t));

@@ -3,6 +3,7 @@ import BoardList from "@/components/BoardList";
 import BrandMark from "@/components/BrandMark";
 import FeaturedFans from "@/components/FeaturedFans";
 import LiveBadge from "@/components/LiveBadge";
+import HomeMusicPlayer from "@/components/HomeMusicPlayer";
 import PromoBanner from "@/components/PromoBanner";
 import {
   ARENAS,
@@ -74,6 +75,8 @@ export default async function HomePage() {
         foundingPassLimit={data.foundingPassLimit}
         weeklyGiveaway={data.weeklyGiveaway}
       />
+
+      <HomeMusicPlayer tracks={data.musicQueue} />
 
       <section className="mx-auto max-w-6xl px-4 py-6">
         <div className="border border-copper-400/40 bg-black/40 p-6 sm:p-8">
