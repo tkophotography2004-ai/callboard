@@ -14,6 +14,7 @@ import { remainingToday } from "@/lib/queries";
 import { consumeFreePass, redeemPassCode } from "@/lib/promo";
 import { markEntryPaid, markFoundingEntry } from "@/lib/money";
 import { createEntryCheckout, stripeEnabled } from "@/lib/stripe";
+import { storeCoverArt } from "@/lib/media";
 import { updateStore } from "@/lib/store";
 import { isoWeekId } from "@/lib/week";
 
@@ -48,9 +49,20 @@ export async function POST(req: Request) {
   if (!title) return json({ error: "Add a title." }, 400);
   if (!genre) return json({ error: "Add a genre." }, 400);
   if (!logline) return json({ error: "Add a one-line pitch." }, 400);
-  if (mediaFile || coverFile) {
+  if (mediaFile) {
     return json({ error: "Paste a link instead of uploading a file." }, 400);
   }
+
+  let coverPath = "/seed/hero.jpg";
+  if (coverFile) {
+    try {
+      coverPath = await storeCoverArt(coverFile);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not save cover art.";
+      return json({ error: message }, 400);
+    }
+  }
+
   if (!embed) {
     const shortHint =
       /vm\.tiktok\.com|vt\.tiktok\.com|tiktok\.com\/t\//i.test(sourceUrl)
@@ -69,7 +81,6 @@ export async function POST(req: Request) {
     return json({ error: `That site is not allowed in this lounge. ${linkHelp(arena)}` }, 400);
   }
 
-  const coverPath = "/seed/hero.jpg";
   // Canonical URL so MediaPlayer parseEmbed works without re-resolving short links.
   const mediaPath = playableMediaUrl(embed);
   const bytes = 0;

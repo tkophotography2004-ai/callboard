@@ -29,6 +29,7 @@ export default function HomeMusicPlayer({ tracks }: Props) {
   /** User pressed Play this session — required before any sound / auto-advance. */
   const [playIntent, setPlayIntent] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,22 +121,18 @@ export default function HomeMusicPlayer({ tracks }: Props) {
 
   if (!tracks.length) {
     return (
-      <section className="mx-auto max-w-6xl px-4 py-6">
-        <div className="border border-white/10 bg-black/40 p-6 sm:p-8">
-          <p className="eyebrow">Music player · this week</p>
-          <h2 className="display mt-2 text-3xl sm:text-4xl">Nothing queued yet</h2>
-          <p className="mt-3 max-w-xl text-sm text-mist">
-            No playable Music Lounge entries this week. Submit a YouTube, SoundCloud, Spotify, or Audiomack link
-            and it will show up here.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/enter" className="btn-copper">
-              Submit
-            </Link>
-            <Link href="/board/tracks" className="btn-ghost">
-              Music board
-            </Link>
-          </div>
+      <section className="border-b border-white/10 bg-ink-950/90" aria-label="Music lounge player">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5 text-sm text-mist">
+          <span className="display text-base text-copper-300" aria-hidden>
+            ♪
+          </span>
+          <span className="min-w-0 flex-1 truncate">No Music queued</span>
+          <Link href="/enter" className="shrink-0 text-[11px] uppercase tracking-[0.16em] text-copper-300 hover:text-copper-200">
+            Submit
+          </Link>
+          <Link href="/board/tracks" className="hidden shrink-0 text-[11px] uppercase tracking-[0.16em] text-white/45 hover:text-copper-200 sm:inline">
+            Music
+          </Link>
         </div>
       </section>
     );
@@ -144,151 +141,137 @@ export default function HomeMusicPlayer({ tracks }: Props) {
   const embed = current ? parseEmbed(current.mediaPath) : null;
   const showEmbed = Boolean(current && embed && playing && playIntent);
   const fileVideo = current?.kind === "file" && isVideoFile(current.mediaPath);
+  const nextTitle = upNext[0]?.title;
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-6">
-      <div className="border border-copper-400/30 bg-black/40 p-5 sm:p-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="eyebrow">Music player · this week</p>
-            <h2 className="display mt-2 text-3xl sm:text-4xl">Listen in</h2>
+    <section className="border-b border-copper-400/25 bg-ink-950/95" aria-label="Music lounge player">
+      <div className="mx-auto max-w-6xl px-4 py-2">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={current!.coverPath}
+            alt=""
+            className="h-10 w-10 shrink-0 object-cover border border-white/10 sm:h-11 sm:w-11"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-copper-300">Music · now playing</p>
+            <p className="truncate text-sm text-paper sm:text-[15px]">{current!.title}</p>
+            <p className="truncate text-[11px] text-mist">
+              {current!.artist}
+              {current!.durationSeconds ? ` · ${formatDuration(current!.durationSeconds)}` : ""}
+              {nextTitle ? ` · Up next: ${nextTitle}` : ""}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/board/tracks" className="btn-ghost !px-3 !py-2 text-[11px]">
-              Music
-            </Link>
-            <Link href="/enter" className="btn-ghost !px-3 !py-2 text-[11px]">
-              Submit
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            <button type="button" onClick={prev} className="btn-ghost !px-2.5 !py-1.5 text-[11px]" aria-label="Previous">
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => (playing ? pause() : play())}
+              className="btn-copper !px-3 !py-1.5 min-w-[4.25rem] text-[11px]"
+              aria-label={playing ? "Pause" : "Play"}
+            >
+              {playing ? "Pause" : "Play"}
+            </button>
+            <button type="button" onClick={next} className="btn-ghost !px-2.5 !py-1.5 text-[11px]" aria-label="Next">
+              Next
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowQueue((v) => !v)}
+              className="btn-ghost !px-2.5 !py-1.5 text-[11px]"
+              aria-expanded={showQueue}
+              aria-label="Up next"
+            >
+              Queue
+            </button>
+            <Link href={`/e/${current!.slug}`} className="btn-ghost !px-2.5 !py-1.5 text-[11px] hidden md:inline">
+              Open
             </Link>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-          <div>
-            <div className="relative overflow-hidden border border-white/10 bg-ink-900">
-              {showEmbed && embed ? (
-                <iframe
-                  key={`${current!.id}-play`}
-                  src={embedPlaybackSrc(embed, true)}
-                  title={current!.title}
-                  className={
-                    embed.kind === "spotify"
-                      ? "h-[352px] w-full"
-                      : "h-[166px] w-full sm:h-[300px]"
-                  }
-                  // Intentionally no autoplay attribute on the iframe element.
-                  // Autoplay only via platform query after user Play (playIntent).
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              ) : fileVideo && current && playing && playIntent ? (
-                <video
-                  ref={videoRef}
-                  key={current.id}
-                  src={current.mediaPath}
-                  playsInline
-                  className="aspect-video w-full object-cover"
-                  onEnded={() => {
-                    if (playIntent && tracks.length > 1) {
-                      setIndex((i) => (i + 1) % tracks.length);
-                      setPlaying(true);
-                    } else {
-                      setPlaying(false);
-                    }
-                  }}
-                />
-              ) : (
-                <div className="relative aspect-[16/9] w-full sm:aspect-[2/1]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={current!.coverPath}
-                    alt=""
-                    className={`h-full w-full object-cover ${playing ? "kenburns" : ""}`}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/20 to-ink-950/40" />
-                  {current?.kind === "file" && !fileVideo && (
-                    <audio
-                      ref={audioRef}
-                      key={current.id}
-                      src={current.mediaPath}
-                      onEnded={() => {
-                        if (playIntent && tracks.length > 1) {
-                          setIndex((i) => (i + 1) % tracks.length);
-                          setPlaying(true);
-                        } else {
-                          setPlaying(false);
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
+        {showQueue && (
+          <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto border-t border-white/10 pt-2">
+            {upNext.length === 0 ? (
+              <li className="px-1 py-1 text-xs text-mist">Only one track this week.</li>
+            ) : (
+              upNext.map((t, i) => (
+                <li key={`${t.id}-${i}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const real = tracks.findIndex((x) => x.id === t.id);
+                      if (real >= 0) goTo(real, playIntent && playing);
+                    }}
+                    className="flex w-full items-center gap-2 px-1 py-1.5 text-left hover:bg-white/[0.03]"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={t.coverPath} alt="" className="h-8 w-8 shrink-0 object-cover" />
+                    <span className="min-w-0 flex-1 truncate text-xs text-paper">{t.title}</span>
+                    <span className="hidden max-w-[8rem] truncate text-[10px] uppercase tracking-[0.12em] text-white/40 sm:inline">
+                      {t.artist}
+                    </span>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        )}
 
-            <div className="mt-4">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-copper-300">Now playing</p>
-              <p className="display mt-1 text-2xl sm:text-3xl">{current!.title}</p>
-              <p className="mt-1 text-sm text-mist">
-                {current!.artist}
-                {current!.durationSeconds ? ` · ${formatDuration(current!.durationSeconds)}` : ""}
-                {current!.kind !== "file" ? ` · ${current!.kind}` : ""}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button type="button" onClick={prev} className="btn-ghost !px-4" aria-label="Previous">
-                  Prev
-                </button>
-                <button
-                  type="button"
-                  onClick={() => (playing ? pause() : play())}
-                  className="btn-copper min-w-[7rem]"
-                  aria-label={playing ? "Pause" : "Play"}
-                >
-                  {playing ? "Pause" : "Play"}
-                </button>
-                <button type="button" onClick={next} className="btn-ghost !px-4" aria-label="Next">
-                  Next
-                </button>
-                <Link href={`/e/${current!.slug}`} className="btn-ghost !px-4 text-[11px]">
-                  Open entry
-                </Link>
-              </div>
-              <p className="mt-3 text-[11px] text-white/40">
-                Silent until you press Play. After that, tracks can advance when one ends.
-              </p>
-            </div>
+        {/* Compact stage: only when actively playing embeds / file video */}
+        {showEmbed && embed ? (
+          <div className="mt-2 overflow-hidden border border-white/10 bg-ink-900">
+            <iframe
+              key={`${current!.id}-play`}
+              src={embedPlaybackSrc(embed, true)}
+              title={current!.title}
+              className={
+                embed.kind === "spotify"
+                  ? "h-[152px] w-full"
+                  : embed.kind === "soundcloud" || embed.kind === "audiomack"
+                    ? "h-[120px] w-full sm:h-[166px]"
+                    : "aspect-video max-h-[220px] w-full"
+              }
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </div>
-
-          <div>
-            <p className="eyebrow">Up next</p>
-            <ul className="mt-3 max-h-[22rem] space-y-2 overflow-y-auto pr-1">
-              {upNext.length === 0 ? (
-                <li className="border border-white/10 p-3 text-sm text-mist">Only one track this week.</li>
-              ) : (
-                upNext.map((t, i) => (
-                  <li key={`${t.id}-${i}`}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const real = tracks.findIndex((x) => x.id === t.id);
-                        if (real >= 0) goTo(real, playIntent && playing);
-                      }}
-                      className="flex w-full gap-3 border border-white/10 p-3 text-left hover:border-copper-400/40"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={t.coverPath} alt="" className="h-12 w-12 shrink-0 object-cover" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm text-paper">{t.title}</span>
-                        <span className="block truncate text-[11px] uppercase tracking-[0.14em] text-white/40">
-                          {t.artist}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
+        ) : fileVideo && current && playing && playIntent ? (
+          <div className="mt-2 overflow-hidden border border-white/10 bg-ink-900">
+            <video
+              ref={videoRef}
+              key={current.id}
+              src={current.mediaPath}
+              playsInline
+              className="aspect-video max-h-[220px] w-full object-cover"
+              onEnded={() => {
+                if (playIntent && tracks.length > 1) {
+                  setIndex((i) => (i + 1) % tracks.length);
+                  setPlaying(true);
+                } else {
+                  setPlaying(false);
+                }
+              }}
+            />
           </div>
-        </div>
+        ) : current?.kind === "file" && !fileVideo ? (
+          <audio
+            ref={audioRef}
+            key={current.id}
+            src={current.mediaPath}
+            className="hidden"
+            onEnded={() => {
+              if (playIntent && tracks.length > 1) {
+                setIndex((i) => (i + 1) % tracks.length);
+                setPlaying(true);
+              } else {
+                setPlaying(false);
+              }
+            }}
+          />
+        ) : null}
       </div>
     </section>
   );

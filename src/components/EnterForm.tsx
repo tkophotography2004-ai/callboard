@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FreePassFields from "@/components/FreePassFields";
 import { linkHelp } from "@/lib/embed";
+import { COVER_ACCEPT, COVER_MAX_BYTES, validateCoverFile } from "@/lib/cover";
 import {
   ARENAS,
   ARENA_PRICE_LABEL,
@@ -33,10 +34,37 @@ export default function EnterForm({
   const [arena, setArena] = useState<Arena>("blind");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverName, setCoverName] = useState("");
   const split = splitEntry(arena);
   const left = remaining[arena];
   const audio = isAudioLounge(arena);
   const mustPay = loungeRequiresPayment(arena, chargesLive);
+
+  useEffect(() => {
+    return () => {
+      if (coverPreview) URL.revokeObjectURL(coverPreview);
+    };
+  }, [coverPreview]);
+
+  function onCoverChange(file: File | null) {
+    setError("");
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    if (!file) {
+      setCoverPreview(null);
+      setCoverName("");
+      return;
+    }
+    const bad = validateCoverFile(file);
+    if (bad) {
+      setError(bad);
+      setCoverPreview(null);
+      setCoverName("");
+      return;
+    }
+    setCoverName(file.name);
+    setCoverPreview(URL.createObjectURL(file));
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -55,6 +83,14 @@ export default function EnterForm({
     if (!sourceUrl) {
       setError(linkHelp(arena));
       return;
+    }
+    const cover = data.get("cover");
+    if (cover instanceof File && cover.size > 0) {
+      const bad = validateCoverFile(cover);
+      if (bad) {
+        setError(bad);
+        return;
+      }
     }
     setBusy(true);
     const res = await fetch("/api/entries", { method: "POST", body: data });
@@ -211,6 +247,43 @@ export default function EnterForm({
               : ""}
         </span>
       </label>
+      <div className="border border-white/10 p-4">
+        <label className="block">
+          <span className="eyebrow">Cover art (optional)</span>
+          <input
+            name="cover"
+            type="file"
+            accept={COVER_ACCEPT}
+            className="mt-2 block w-full text-sm text-mist file:mr-3 file:border file:border-white/20 file:bg-transparent file:px-3 file:py-1.5 file:text-[11px] file:uppercase file:tracking-[0.16em] file:text-copper-300"
+            onChange={(e) => onCoverChange(e.target.files?.[0] || null)}
+          />
+        </label>
+        <p className="mt-2 text-xs text-white/45">
+          JPEG, PNG, or WebP · max {Math.round(COVER_MAX_BYTES / (1024 * 1024))}MB. Shown on the board, entry page, and Music
+          player. Leave blank to use the default art.
+          {arena === "blind" ? " Blind: image is fine — keep your identity out of the title and pitch." : ""}
+        </p>
+        {coverPreview && (
+          <div className="mt-3 flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverPreview} alt="" className="h-16 w-16 object-cover border border-white/10" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm text-paper">{coverName}</p>
+              <button
+                type="button"
+                className="mt-1 text-[11px] uppercase tracking-[0.16em] text-copper-300"
+                onClick={() => {
+                  const input = document.querySelector<HTMLInputElement>('input[name="cover"]');
+                  if (input) input.value = "";
+                  onCoverChange(null);
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       <FreePassFields freePasses={freePasses} mustPay={mustPay} />
       <p className="text-xs text-white/45">{LINK_ONLY_LINE}</p>
       {error && <p className="text-sm text-copper-300">{error}</p>}

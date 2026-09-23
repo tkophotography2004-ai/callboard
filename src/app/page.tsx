@@ -27,6 +27,8 @@ export default async function HomePage() {
 
   return (
     <>
+      <HomeMusicPlayer tracks={data.musicQueue} />
+
       <section className="relative min-h-[78dvh] overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/seed/hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -75,8 +77,6 @@ export default async function HomePage() {
         foundingPassLimit={data.foundingPassLimit}
         weeklyGiveaway={data.weeklyGiveaway}
       />
-
-      <HomeMusicPlayer tracks={data.musicQueue} />
 
       <section className="mx-auto max-w-6xl px-4 py-6">
         <div className="border border-copper-400/40 bg-black/40 p-6 sm:p-8">

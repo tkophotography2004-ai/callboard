@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+import { looksLikeImageBytes, validateCoverFile } from "@/lib/cover";
 import { promises as fs } from "fs";
 import { createReadStream, createWriteStream, statSync } from "fs";
 import path from "path";
@@ -176,4 +178,32 @@ export function toneWav(freq: number, seconds = 12, sampleRate = 22050) {
     buf.writeInt16LE(Math.round(v * env * 32767), 44 + i * 2);
   }
   return buf;
+}
+
+function blobEnabled() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
+
+/** Persist optional cover art. Prefer public Vercel Blob; fall back to local /api/media. */
+export async function storeCoverArt(file: File): Promise<string> {
+  const err = validateCoverFile(file);
+  if (err) throw new Error(err);
+  const buf = Buffer.from(await file.arrayBuffer());
+  if (!looksLikeImageBytes(buf)) throw new Error("That file is not a valid image.");
+
+  const mime = file.type && ALLOWED_IMAGE.has(file.type) ? file.type : contentTypeFor(extFromFile(file, ".jpg"));
+  const ext = extFromFile({ type: mime, name: file.name }, ".jpg");
+  const filename = `cover_${nanoid(12)}${ext}`;
+
+  if (blobEnabled()) {
+    const { put } = await import("@vercel/blob");
+    const blob = await put(`callboard/covers/${filename}`, buf, {
+      access: "public",
+      contentType: mime,
+      addRandomSuffix: false,
+    });
+    return blob.url;
+  }
+
+  return saveUpload(filename, buf);
 }
