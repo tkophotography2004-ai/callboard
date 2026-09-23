@@ -53,9 +53,10 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
           arena={pub.arena}
           durationSeconds={pub.durationSeconds}
           hookStartSeconds={pub.hookStartSeconds}
+          anonymous={pub.hiddenArtist}
         />
       </div>
-      {pub.links && <ArtistLinks links={pub.links} />}
+      {pub.links && !pub.hiddenArtist && <ArtistLinks links={pub.links} />}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         {pub.hiddenArtist ? (

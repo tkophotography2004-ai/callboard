@@ -56,7 +56,7 @@ export default async function StudioPage({
       <h1 className="display mt-3 text-5xl">Studio</h1>
       {sp.paid === "1" && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
-          Paid. The cut is on the board. On Track, Film, Music Video, and Creator, copy the share link below and send it
+          Paid. The cut is on the board. On Music, Film, Music Video, and Creator, copy the share link below and send it
           to your fans. Shares never rank the pot.
         </p>
       )}
@@ -79,7 +79,7 @@ export default async function StudioPage({
             <>
               {" "}
               <span className="mt-2 block font-mono text-base text-copper-200">
-                Your free submission code: {awardedCode} — use it next time on Enter.
+                Your free submission code: {awardedCode} — use it next time on Submit.
               </span>
             </>
           ) : null}
@@ -88,7 +88,7 @@ export default async function StudioPage({
       {awardedCode && sp.pass !== "1" && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
           Your free submission code:{" "}
-          <span className="font-mono text-base text-copper-200">{awardedCode}</span> — use it next time on Enter.
+          <span className="font-mono text-base text-copper-200">{awardedCode}</span> — use it next time on Submit.
         </p>
       )}
       {sp.usedpass === "1" && (
@@ -98,7 +98,7 @@ export default async function StudioPage({
         <p className="mt-4 border border-white/15 p-4 text-sm text-mist">Checkout canceled. Nothing was charged.</p>
       )}
       <p className="mt-4 text-mist">
-        Blind left today: {remaining.blind} of 1. Other lounges: Track {remaining.tracks}, Film {remaining.film}, Video{" "}
+        Blind left today: {remaining.blind} of 1. Other lounges: Music {remaining.tracks}, Film {remaining.film}, Video{" "}
         {remaining.video}, Creator {remaining.creator} of 3 each. Free passes: {user.freePasses || 0}. Winnings go to{" "}
         {[user.cashtag, user.paypalEmail].filter(Boolean).join(" or ") || "Cash App or PayPal (optional — add below)"}.
       </p>
@@ -113,7 +113,7 @@ export default async function StudioPage({
             <>
               {" "}
               Code{passCodes.length === 1 ? "" : "s"}:{" "}
-              <span className="font-mono text-paper">{passCodes.join(", ")}</span> — paste on Enter.
+              <span className="font-mono text-paper">{passCodes.join(", ")}</span> — paste on Submit.
             </>
           ) : null}
         </p>

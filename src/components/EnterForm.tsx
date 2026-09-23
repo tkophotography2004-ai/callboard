@@ -101,7 +101,7 @@ export default function EnterForm({
       <div className="border border-white/10 p-4 text-sm text-mist">
         {!chargesLive ? (
           <>
-            The cash pot is off while the board fills. Enter free. Same Keep / Pass rules. When the house opens the
+            The cash pot is off while the board fills. Submit free. Same Keep / Pass rules. When the house opens the
             pot, Blind will be {formatUsd(splitEntry("blind").entryCents)} and tracks/videos{" "}
             {formatUsd(splitEntry("tracks").entryCents)} — this founding cut will not be charged.
           </>
@@ -220,12 +220,12 @@ export default function EnterForm({
           : left <= 0
             ? "Limit reached"
             : !chargesLive
-              ? "Enter free — pot is off"
+              ? "Submit free — pot is off"
               : !mustPay
-                ? "Enter free — beta"
+                ? "Submit free — beta"
                 : stripeReady
                     ? `Pay ${formatUsd(split.entryCents)} on Stripe`
-                    : `Enter ${formatUsd(split.entryCents)} (demo)`}
+                    : `Submit ${formatUsd(split.entryCents)} (demo)`}
       </button>
       <p className="text-xs text-white/45">
         {arena === "blind"
@@ -234,7 +234,7 @@ export default function EnterForm({
         {!mustPay
           ? arena === "blind"
             ? " No charge until the house opens the pot."
-            : " No charge during beta. Share the link with your fans after you enter."
+            : " No charge during beta. Share the link with your fans after you submit."
           : stripeReady
             ? " Card or Cash App Pay."
             : " Stripe is not connected, so this would mark paid without a charge."}

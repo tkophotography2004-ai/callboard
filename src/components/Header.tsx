@@ -24,7 +24,7 @@ export default function Header({ user }: { user: SessionUser | null }) {
             </a>
           )}
           <a href="/enter" className="btn-copper !px-4 !py-2">
-            Enter
+            Submit
           </a>
         </nav>
       </div>

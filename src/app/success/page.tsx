@@ -77,7 +77,7 @@ export default async function SuccessPage({
         <div className="mt-6 border border-copper-400/40 bg-black/40 p-5">
           <p className="eyebrow">Your free submission code</p>
           <p className="mt-3 font-mono text-2xl tracking-wider text-copper-200 sm:text-3xl">{code}</p>
-          <p className="mt-3 text-sm text-mist">Paste it next time on Enter to submit without paying.</p>
+          <p className="mt-3 text-sm text-mist">Paste it next time on Submit to submit without paying.</p>
         </div>
       ) : null}
 
@@ -91,7 +91,7 @@ export default async function SuccessPage({
           Open board
         </Link>
         <Link href="/enter" className="btn-ghost text-center">
-          Enter again
+          Submit again
         </Link>
         <Link href="/studio" className="btn-ghost text-center">
           Studio

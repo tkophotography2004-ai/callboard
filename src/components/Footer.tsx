@@ -24,7 +24,7 @@ export default function Footer() {
             Blind
           </Link>
           <Link href="/board/tracks" className="hover:text-copper-200">
-            Track
+            Music
           </Link>
           <Link href="/board/film" className="hover:text-copper-200">
             Film
@@ -38,7 +38,7 @@ export default function Footer() {
         </div>
       </div>
       <p className="mx-auto mt-6 max-w-6xl text-xs text-white/40">
-        Blind is $30, music tracks only, one per 24 hours. Track, Film, Music Video, and Creator lounges are $5 for
+        Blind is $30, music only, one per 24 hours. Music, Film, Music Video, and Creator lounges are $5 for
         launch (regular $10 a submission), three per 24 hours. Fans who Keep or Pass can earn and get a featured spot.{" "}
         {potCapLine()} Ranked by
         Keep / Pass. The week closes Sunday. Cash App payouts within 10 days of the crown. There is nothing like this.

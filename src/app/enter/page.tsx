@@ -6,7 +6,7 @@ import { potCapLine } from "@/lib/rules";
 import { stripeEnabled } from "@/lib/stripe";
 import { readStore } from "@/lib/store";
 
-export const metadata = { title: "Enter" };
+export const metadata = { title: "Submit" };
 
 export default async function EnterPage() {
   const user = await getSessionUser();
@@ -14,7 +14,7 @@ export default async function EnterPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-16">
         <p className="eyebrow">Two ways in</p>
-        <h1 className="display mt-3 text-5xl">Enter the board</h1>
+        <h1 className="display mt-3 text-5xl">Submit to the board</h1>
         <p className="mt-4 text-mist">Paste a link. Strangers Keep or Pass. Clicks do not buy first place.</p>
 
         <div className="mt-8 space-y-3">
@@ -25,9 +25,9 @@ export default async function EnterPage() {
             </p>
           </div>
           <div className="border border-white/10 p-4">
-            <p className="text-paper">Track · Film · Music Video · Creator</p>
+            <p className="text-paper">Music · Film · Music Video · Creator</p>
             <p className="mt-2 text-sm text-mist">
-              $5 launch ($10 regular) · named · Track adds Instagram · Film / Video / Creator: YouTube, TikTok,
+              $5 launch ($10 regular) · named · Music adds Instagram · Film / Video / Creator: YouTube, TikTok,
               Instagram, Vimeo
             </p>
           </div>
@@ -69,7 +69,7 @@ export default async function EnterPage() {
       <p className="mt-4 text-mist">
         {store.chargesLive
           ? "Choose a lounge, paste your link, and go. Keep / Pass ranks the work — not clicks."
-          : "The cash pot is off while the board fills. Enter free. Same Keep / Pass rules."}
+          : "The cash pot is off while the board fills. Submit free. Same Keep / Pass rules."}
       </p>
 
       <div className="mt-6 space-y-3">
@@ -78,7 +78,7 @@ export default async function EnterPage() {
           Audiomack, TikTok
         </div>
         <div className="border border-white/10 p-4 text-sm text-mist">
-          <span className="text-paper">Named lounges $5 launch</span> — Track, Film, Music Video, Creator · three per
+          <span className="text-paper">Named lounges $5 launch</span> — Music, Film, Music Video, Creator · three per
           24h · {potCapLine()}
         </div>
       </div>
@@ -86,7 +86,7 @@ export default async function EnterPage() {
       {(user.freePasses || 0) > 0 && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
           You have {user.freePasses} free {user.freePasses === 1 ? "pass" : "passes"}. Check the box on the form, or
-          paste your SC- code, to enter without paying.
+          paste your SC- code, to submit without paying.
         </p>
       )}
       {!hasPayout && (
@@ -95,7 +95,7 @@ export default async function EnterPage() {
           <Link href="/studio" className="text-copper-300">
             Studio
           </Link>{" "}
-          so Tina can pay you if you place. Not required to enter.
+          so Tina can pay you if you place. Not required to submit.
         </p>
       )}
       <EnterForm

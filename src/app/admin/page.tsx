@@ -78,7 +78,7 @@ export default async function AdminPage() {
         </h2>
         <p className="mt-2 text-sm text-mist">
           First {FOUNDING_PASS_LIMIT} artists who land a paid/founding entry earn a free future submission code
-          (SC-XXXXXX). Unused codes can be pasted on Enter.
+          (SC-XXXXXX). Unused codes can be pasted on Submit.
         </p>
         {foundingPasses.length === 0 ? (
           <p className="mt-4 text-sm text-mist">No founding passes awarded yet.</p>

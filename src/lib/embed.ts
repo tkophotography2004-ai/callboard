@@ -18,7 +18,7 @@ export type ParsedEmbed = {
 
 /** Blind: music platforms + TikTok. */
 const BLIND_KINDS = new Set<EmbedKind>(["youtube", "soundcloud", "spotify", "audiomack", "tiktok"]);
-/** Track lounge: Blind set + Instagram (no Vimeo). */
+/** Music lounge: Blind set + Instagram (no Vimeo). */
 const TRACKS_KINDS = new Set<EmbedKind>(["youtube", "soundcloud", "spotify", "audiomack", "tiktok", "instagram"]);
 /** Film / Music Video / Creator. */
 const VIDEO_KINDS = new Set<EmbedKind>(["youtube", "tiktok", "instagram", "vimeo"]);

@@ -33,7 +33,7 @@ export default function AdminCharges({ live }: { live: boolean }) {
       <h2 className="display mt-2 text-3xl">{on ? "Charges are on" : "Gathering the board"}</h2>
       <p className="mt-3 max-w-xl text-sm text-mist">
         {on
-          ? "Stripe is collecting $30 Blind (music) and $5 launch ($10 regular) for Track / Film / Music Video / Creator. Flip this off if you need to pause money."
+          ? "Stripe is collecting $30 Blind (music) and $5 launch ($10 regular) for Music / Film / Music Video / Creator. Flip this off if you need to pause money."
           : "People can still sign up, submit, and judge for free. No Stripe charge. No prize money. Turn this on when enough artists are in and you want the cash pot to start."}
       </p>
       <button

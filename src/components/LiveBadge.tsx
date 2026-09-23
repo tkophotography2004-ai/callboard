@@ -15,7 +15,7 @@ export default function LiveBadge({
     ? namedLoungesAreFree()
       ? "Pot is live - Blind $30 - named lounges free"
       : `Pot is live - Blind $30 - ${namedPriceLine()}`
-    : "Pot is off - free to enter";
+    : "Pot is off - free to submit";
   const inner = (
     <>
       <span className="live-dot" aria-hidden />

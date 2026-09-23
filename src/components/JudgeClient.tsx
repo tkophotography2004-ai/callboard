@@ -101,7 +101,7 @@ export default function JudgeClient({ arena, signedIn = false }: { arena: Arena;
       {card && !reveal && (
         <div className="mt-6 overflow-hidden border border-white/10">
           <p className="px-4 py-3 text-[11px] uppercase tracking-[0.22em] text-copper-300">
-            {card.screenKind ? SCREEN_KIND_LABEL[card.screenKind] : "Track"} · {card.genre}
+            {card.screenKind ? SCREEN_KIND_LABEL[card.screenKind] : card.arena === "blind" ? "Entry" : "Music"} - {card.genre}
           </p>
           <MediaPlayer
             key={card.id}
@@ -111,6 +111,7 @@ export default function JudgeClient({ arena, signedIn = false }: { arena: Arena;
             durationSeconds={card.durationSeconds}
             hookStartSeconds={card.hookStartSeconds}
             autoPlay
+            anonymous={arena === "blind"}
           />
           <div className="grid grid-cols-2">
             <button type="button" disabled={busy} onClick={() => vote(false)} className="btn-pass py-5">

@@ -53,7 +53,7 @@ export const PAYOUT_DAYS = 10;
 
 export const ARENA_LABEL: Record<Arena, string> = {
   blind: "Blind Lounge",
-  tracks: "Track Lounge",
+  tracks: "Music Lounge",
   film: "Film Lounge",
   video: "Music Video Lounge",
   creator: "Creator Lounge",
@@ -65,7 +65,7 @@ export const PUBLIC_CLOSED = false;
 /** Named lounges free until this instant (48h open-house). Blind stays $30. */
 export const NAMED_FREE_UNTIL_MS = Date.parse("2026-09-24T16:00:00.000Z"); // Thu Sep 24, 11:00 AM America/Chicago
 
-/** True while Track / Film / Music Video / Creator entries are free. Blind stays paid. */
+/** True while Music / Film / Music Video / Creator entries are free. Blind stays paid. */
 export function namedLoungesAreFree(at = Date.now()) {
   return at < NAMED_FREE_UNTIL_MS;
 }
@@ -119,7 +119,7 @@ export function loungeRequiresPayment(arena: Arena, chargesLive: boolean) {
 export function arenaPriceLabel(arena: Arena) {
   if (arena === "blind") return "Blind $30";
   const names: Record<Exclude<Arena, "blind">, string> = {
-    tracks: "Track",
+    tracks: "Music",
     film: "Film",
     video: "Music Video",
     creator: "Creator",
@@ -209,12 +209,12 @@ export function potCapLine(at = Date.now()) {
 export const POT_CAP_LINE = potCapLine();
 
 export const LINK_ONLY_LINE =
-  "Paste a link. Blind: YouTube, SoundCloud, Spotify, Audiomack, or TikTok. Track: those plus Instagram. Film, music videos, and Creator: YouTube, TikTok, Instagram, or Vimeo.";
+  "Paste a link. Blind: YouTube, SoundCloud, Spotify, Audiomack, or TikTok. Music: those plus Instagram. Film, music videos, and Creator: YouTube, TikTok, Instagram, or Vimeo.";
 
 export const FILE_LIMIT_LINE = LINK_ONLY_LINE;
 
 export const LIMITS_LINE =
-  "Blind is one music track per 24 hours. Track, Film, Music Video, and Creator lounges are three submissions per 24 hours.";
+  "Blind is one music submission per 24 hours. Music, Film, Music Video, and Creator lounges are three submissions per 24 hours.";
 
 export const FAN_POT_LINE =
   "Fans who Keep or Pass earn a shot at the fan pot. Come back every week. Top fans get Cash App payouts and a featured spot with their socials.";

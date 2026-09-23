@@ -57,7 +57,7 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
             : "Ranked by Keep / Pass after a stranger actually plays it. Film and music videos can be a linked YouTube, TikTok, Instagram, or Vimeo. Share count is shown. It does not buy rank."}{" "}
         {store.chargesLive
           ? `${potCapLine()} ${PAYDAY_LINE}`
-          : `Pot is off. Enter free. When it opens: ${potCapLine()}`}
+          : `Pot is off. Submit free. When it opens: ${potCapLine()}`}
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
         {ARENAS.map((a) => (
@@ -69,7 +69,7 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
           Judge this board
         </Link>
         <Link href="/enter" className="btn-ghost !py-2">
-          Enter
+          Submit
         </Link>
       </div>
       <FeaturedWinners weekId={featuredWeek?.id || weekId} winners={winners} />

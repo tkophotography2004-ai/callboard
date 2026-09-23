@@ -31,7 +31,7 @@ export default function HowPage() {
         <section>
           <h2 className="display text-2xl text-paper">The pot is live</h2>
           <p className="mt-3">
-            Blind is {formatUsd(blind.entryCents)} and is music tracks only. Track, Film, Music Video, and Creator
+            Blind is {formatUsd(blind.entryCents)} and is music only. Music, Film, Music Video, and Creator
             lounges are {namedPriceSentence()}. {LIMITS_LINE}
           </p>
         </section>
@@ -71,11 +71,11 @@ export default function HowPage() {
 
         <section>
           <h2 className="display text-2xl text-paper">
-            Track, Film, and Music Video Lounges — {namedPriceLine()}
+            Music, Film, and Music Video Lounges — {namedPriceLine()}
           </h2>
           <p className="mt-3">
             Named lounges. Your name is on the page. You can share the link. Share count is shown. It never ranks the
-            pot. Keep / Pass still decides the money. Track lounge: paste YouTube, SoundCloud, Spotify, Audiomack,
+            pot. Keep / Pass still decides the money. Music lounge: paste YouTube, SoundCloud, Spotify, Audiomack,
             TikTok, or Instagram. Film and music videos: paste YouTube, TikTok, Instagram, or Vimeo (under 2 minutes).
             Paste a link — it plays on Scroll Call®. Each lounge has its own pot. Three entries per lounge per 24 hours.
           </p>
@@ -168,7 +168,7 @@ export default function HowPage() {
           Judge Blind
         </Link>
         <Link href="/enter" className="btn-ghost">
-          Enter
+          Submit
         </Link>
       </div>
     </div>

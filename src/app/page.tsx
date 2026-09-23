@@ -45,7 +45,7 @@ export default async function HomePage() {
             The record stays on.
           </h1>
           <p className="mt-5 max-w-xl text-base text-paper/80">
-            Blind is $30 — music tracks only. Track, Film, Music Video, and Creator lounges are{" "}
+            Blind is $30 — music only. Music, Film, Music Video, and Creator lounges are{" "}
             {namedPriceSentence()}. Strangers Keep or Pass. Clicks cannot buy first place.{" "}
             {FAN_POT_LINE}
           </p>
@@ -57,7 +57,7 @@ export default async function HomePage() {
               Judge and earn
             </Link>
             <Link href="/enter" className="btn-ghost">
-              Enter
+              Submit
             </Link>
             <Link href="/how" className="btn-ghost">
               Why not clicks?
@@ -147,10 +147,10 @@ export default async function HomePage() {
         <div className="grid gap-12 sm:grid-cols-2">
           <div>
             <p className="eyebrow">{namedPriceLine()}</p>
-            <h2 className="display mt-2 text-3xl">Track Lounge</h2>
+            <h2 className="display mt-2 text-3xl">Music Lounge</h2>
             <BoardList rows={data.tracks.board} />
             <Link href="/board/tracks" className="btn-ghost mt-5">
-              Full track board
+              Full music board
             </Link>
           </div>
           <div>
