@@ -19,19 +19,20 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/studio?paid=0", req.url));
     }
     const entryId = session.metadata?.entryId;
-    let awardedPass = false;
+    let passCode: string | null = null;
     if (entryId) {
       await updateStore((store) => {
         const entry = store.entries.find((e) => e.id === entryId);
         if (entry && entry.status !== "paid") {
-          const owner = store.users.find((u) => u.id === entry.userId);
-          const had = Boolean(owner?.earnedFoundingPass);
-          markEntryPaid(store, entry, session.id);
-          awardedPass = Boolean(owner?.earnedFoundingPass) && !had;
+          const paid = markEntryPaid(store, entry, session.id);
+          passCode = paid.passCode;
         }
       });
     }
-    if (awardedPass) studio.searchParams.set("pass", "1");
+    if (passCode) {
+      studio.searchParams.set("pass", "1");
+      studio.searchParams.set("code", passCode);
+    }
     return NextResponse.redirect(studio);
   } catch {
     return NextResponse.redirect(new URL("/studio", req.url));

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const cashtag = normalizeCashtag(body.cashtag || "");
   const paypalEmail = normalizePaypalEmail(body.paypalEmail || "");
 
-  if (!emailOk(email)) return json({ error: "Enter a valid email." }, 400);
+  if (!emailOk(email)) return json({ error: "Enter a real email address. Test and disposable domains are not allowed." }, 400);
   if (password.length < 8) return json({ error: "Password must be at least 8 characters." }, 400);
   if (!displayName) return json({ error: "Enter the name you want on the board." }, 400);
   if (!usernameOk(username)) {
