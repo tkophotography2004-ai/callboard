@@ -58,8 +58,8 @@ export default async function EnterPage() {
       </p>
       {(user.freePasses || 0) > 0 && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
-          You have {user.freePasses} free {user.freePasses === 1 ? "pass" : "passes"}. Check the box on the form to
-          enter without paying.
+          You have {user.freePasses} free {user.freePasses === 1 ? "pass" : "passes"}. Check the box on the form, or
+          paste your SC- code, to enter without paying.
         </p>
       )}
       {!hasPayout && (
