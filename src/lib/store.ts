@@ -6,7 +6,8 @@ import { EMPTY_LINKS, type FanWeek, type Store, type Week } from "./types";
 import { isoWeekId, previousWeekId, weekRange } from "./week";
 import { ARENAS, migrateArena, splitEntry, type Arena } from "./rules";
 import { cappedPot } from "./money";
-import { ensureWeeklyGiveaway } from "./promo";
+import { backfillFoundingPassCodes, ensureWeeklyGiveaway } from "./promo";
+import { stripDemoPlaceholders as stripFakeAccounts } from "./storeCleanup";
 
 function seedPath() {
   return path.join(process.cwd(), "data", "store.json");
@@ -65,6 +66,7 @@ function emptyStore(): Store {
     chargesLive: true,
     chargesLiveAt: new Date().toISOString(),
     foundingPassCount: 0,
+    foundingPasses: [],
     weeklyGiveaway: null,
   };
 }
@@ -122,19 +124,7 @@ function closeFanWeekIfDue(store: Store, weekId: string) {
 }
 
 function stripDemoPlaceholders(store: Store) {
-  const seedUsers = store.users.filter((u) => u.email.endsWith("@callboard.app"));
-  if (!seedUsers.length) return false;
-  const seedIds = new Set(seedUsers.map((u) => u.id));
-  store.users = store.users.filter((u) => !seedIds.has(u.id));
-  store.entries = store.entries.filter(
-    (e) => !seedIds.has(e.userId) && !/^e_(midnight|engine|tide|cash|glass|lot|season|last)$/.test(e.id),
-  );
-  const liveIds = new Set(store.entries.map((e) => e.id));
-  store.votes = store.votes.filter((v) => liveIds.has(v.entryId));
-  if (store.weeklyGiveaway && seedIds.has(store.weeklyGiveaway.userId || "")) {
-    store.weeklyGiveaway = { weekId: store.weeklyGiveaway.weekId, userId: null, username: "", displayName: "" };
-  }
-  return true;
+  return stripFakeAccounts(store);
 }
 
 function closeWeekIfDue(store: Store, arena: Arena, weekId: string) {
@@ -172,6 +162,7 @@ function migrate(store: Store): Store {
   if (!store.fanWeeks) store.fanWeeks = [];
   if (!store.houseCents) store.houseCents = 0;
   if (store.foundingPassCount === undefined) store.foundingPassCount = 0;
+  if (!store.foundingPasses) store.foundingPasses = [];
   if (store.weeklyGiveaway === undefined) store.weeklyGiveaway = null;
   if (stripDemoPlaceholders(store)) {
     store.chargesLive = true;
@@ -188,6 +179,7 @@ function migrate(store: Store): Store {
     if (user.earnedFoundingPass === undefined) user.earnedFoundingPass = false;
     user.links = { ...EMPTY_LINKS, ...(user.links || {}) };
   }
+  if (backfillFoundingPassCodes(store)) persistAfterMigrate = true;
   for (const vote of store.votes) {
     if (vote.userId === undefined) vote.userId = null;
   }
