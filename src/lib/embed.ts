@@ -160,6 +160,27 @@ function looksLikeTikTokShort(raw: string) {
   }
 }
 
+/** Stable URL that parseEmbed can re-parse without a network round-trip. */
+export function playableMediaUrl(embed: ParsedEmbed): string {
+  switch (embed.kind) {
+    case "youtube":
+      return `https://www.youtube.com/watch?v=${embed.id}`;
+    case "tiktok":
+      return `https://www.tiktok.com/@_/video/${embed.id}`;
+    case "instagram":
+      return `https://www.instagram.com/reel/${embed.id}/`;
+    case "vimeo":
+      return `https://vimeo.com/${embed.id}`;
+    case "spotify":
+      return embed.original.includes("open.spotify.com") ? embed.original : `https://open.spotify.com/track/${embed.id}`;
+    case "soundcloud":
+    case "audiomack":
+      return embed.original;
+    default:
+      return embed.original;
+  }
+}
+
 /** Follow one redirect chain (TikTok short links) then parse. */
 export async function resolveAndParseEmbed(raw: string | null | undefined): Promise<ParsedEmbed | null> {
   const t = String(raw || "").trim();
