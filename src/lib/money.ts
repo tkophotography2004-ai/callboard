@@ -10,7 +10,7 @@ export function cappedPot(cents: number) {
   return Math.min(Math.max(0, cents), potCapCents());
 }
 
-export function markFoundingEntry(store: Store, entry: Entry) {
+export function markFoundingEntry(store: Store, entry: Entry): string | null {
   entry.status = "paid";
   entry.paidAt = entry.paidAt || new Date().toISOString();
   entry.stripeSessionId = "founding";
@@ -19,10 +19,15 @@ export function markFoundingEntry(store: Store, entry: Entry) {
   entry.feeCents = 0;
   entry.fanCents = 0;
   const owner = store.users.find((u) => u.id === entry.userId);
-  if (owner) awardFoundingPass(store, owner);
+  if (!owner) return null;
+  return awardFoundingPass(store, owner, entry.id);
 }
 
-export function markEntryPaid(store: Store, entry: Entry, stripeSessionId?: string | null) {
+export function markEntryPaid(
+  store: Store,
+  entry: Entry,
+  stripeSessionId?: string | null,
+): { split: ReturnType<typeof splitEntry>; passCode: string | null } {
   const split = splitEntry(entry.arena);
   const already = entry.status === "paid";
   const week = store.weeks.find((w) => w.id === entry.weekId && w.arena === entry.arena) || null;
@@ -40,12 +45,13 @@ export function markEntryPaid(store: Store, entry: Entry, stripeSessionId?: stri
   entry.fanCents = toFan;
   entry.houseCents = split.houseCents + overflow + fanOverflow;
   entry.feeCents = split.feeCents;
+  let passCode: string | null = null;
   if (!already) {
     store.houseCents = (store.houseCents || 0) + split.houseCents + overflow + fanOverflow;
     if (week) week.potCents = cappedPot((week.potCents || 0) + toPot);
     if (fanWeek) fanWeek.potCents = cappedPot((fanWeek.potCents || 0) + toFan);
     const owner = store.users.find((u) => u.id === entry.userId);
-    if (owner) awardFoundingPass(store, owner);
+    if (owner) passCode = awardFoundingPass(store, owner, entry.id);
   }
-  return split;
+  return { split, passCode };
 }

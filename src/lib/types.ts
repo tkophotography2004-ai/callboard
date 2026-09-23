@@ -136,6 +136,17 @@ export type Payout = {
   note: string;
 };
 
+export type FoundingPass = {
+  code: string;
+  userId: string;
+  username: string;
+  email: string;
+  displayName: string;
+  awardedAt: string;
+  entryId: string | null;
+  usedAt: string | null;
+};
+
 export type Store = {
   users: User[];
   entries: Entry[];
@@ -148,6 +159,7 @@ export type Store = {
   chargesLive: boolean;
   chargesLiveAt: string | null;
   foundingPassCount: number;
+  foundingPasses: FoundingPass[];
   weeklyGiveaway: {
     weekId: string;
     userId: string | null;
