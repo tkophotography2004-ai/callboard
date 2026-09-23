@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { isResponse, json, requireUser } from "@/lib/api";
-import { embedAllowed, linkHelp, resolveAndParseEmbed } from "@/lib/embed";
+import { embedAllowed, linkHelp, playableMediaUrl, resolveAndParseEmbed } from "@/lib/embed";
 import { readArtistLinks, uniqueSlug } from "@/lib/format";
 import {
   PRICE,
@@ -70,7 +70,8 @@ export async function POST(req: Request) {
   }
 
   const coverPath = "/seed/hero.jpg";
-  const mediaPath = embed.original;
+  // Canonical URL so MediaPlayer parseEmbed works without re-resolving short links.
+  const mediaPath = playableMediaUrl(embed);
   const bytes = 0;
 
   const created = await updateStore((store) => {
