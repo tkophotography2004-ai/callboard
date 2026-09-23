@@ -68,20 +68,18 @@ export default function EnterForm({
       window.location.href = json.checkoutUrl;
       return;
     }
-    const codeQ = json.passCode ? `&code=${encodeURIComponent(json.passCode)}` : "";
-    if (json.awardedPass) {
-      window.location.href = json.pass ? `/studio?pass=1&usedpass=1${codeQ}` : `/studio?pass=1${codeQ}`;
-      return;
-    }
-    if (json.pass) {
-      window.location.href = `/studio?usedpass=1${codeQ}`;
-      return;
-    }
-    if (json.beta) {
-      window.location.href = `/studio?beta=1${codeQ}`;
-      return;
-    }
-    window.location.href = json.founding ? `/studio?founding=1${codeQ}` : `/studio?paid=1${codeQ}`;
+    const q = new URLSearchParams();
+    if (json.slug) q.set("slug", String(json.slug));
+    q.set("arena", arena);
+    const title = String(data.get("title") || "").trim();
+    if (title) q.set("title", title);
+    if (json.passCode) q.set("code", String(json.passCode));
+    if (json.awardedPass) q.set("pass", "1");
+    if (json.pass) q.set("usedpass", "1");
+    if (json.beta) q.set("beta", "1");
+    if (json.founding) q.set("founding", "1");
+    if (!json.beta && !json.founding && !json.pass && !json.awardedPass) q.set("paid", "1");
+    window.location.href = `/success?${q.toString()}`;
   }
 
   return (
