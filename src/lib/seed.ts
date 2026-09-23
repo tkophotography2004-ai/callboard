@@ -12,6 +12,7 @@ export async function seedStore(store: Store): Promise<Store> {
   store.chargesLive = true;
   store.chargesLiveAt = new Date().toISOString();
   store.foundingPassCount = 0;
+  store.foundingPasses = [];
   store.weeklyGiveaway = null;
   return store;
 }
