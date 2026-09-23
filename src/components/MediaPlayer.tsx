@@ -99,6 +99,35 @@ export default function MediaPlayer({
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         />
+        <a
+          href={embed.original.startsWith("http") ? embed.original : mediaPath || "#"}
+          target="_blank"
+          rel="noreferrer"
+          className="absolute bottom-3 right-3 rounded-full bg-ink-950/80 px-3 py-1.5 text-[11px] uppercase tracking-[0.16em] text-copper-200 hover:bg-ink-950"
+        >
+          Open link
+        </a>
+      </div>
+    );
+  }
+
+  // Short TikTok/share links (or any remote URL) that did not parse: never hide the cut.
+  const remote =
+    mediaPath &&
+    (mediaPath.startsWith("http://") || mediaPath.startsWith("https://"))
+      ? mediaPath
+      : null;
+  if (remote && !video) {
+    return (
+      <div className="relative overflow-hidden bg-ink-900 aspect-[9/16] max-h-[70vh] sm:aspect-video">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={coverPath} alt="" className="h-full w-full object-cover opacity-60" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink-950/55 p-6 text-center">
+          <p className="text-sm text-mist">Preview needs the original site. Tap to play there.</p>
+          <a href={remote} target="_blank" rel="noreferrer" className="btn-copper">
+            Play on linked site
+          </a>
+        </div>
       </div>
     );
   }
