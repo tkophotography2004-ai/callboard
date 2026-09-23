@@ -9,17 +9,17 @@ import {
   PAYDAY_LINE,
   potCapLine,
   WEEKLY_GIVEAWAY_LINE,
-  namedLoungesAreFree,
+  freeWeekEndLabel,
   namedPriceLine,
   namedPriceSentence,
   formatUsd,
   splitEntry,
+  submissionsAreFree,
 } from "@/lib/rules";
 
 export const metadata = { title: "How it works" };
 
 export default function HowPage() {
-  const blind = splitEntry("blind");
   const floor = splitEntry("tracks");
 
   return (
@@ -31,8 +31,18 @@ export default function HowPage() {
         <section>
           <h2 className="display text-2xl text-paper">The pot is live</h2>
           <p className="mt-3">
-            Blind is {formatUsd(blind.entryCents)} and is music only. Music, Film, Music Video, and Creator
-            lounges are {namedPriceSentence()}. {LIMITS_LINE}
+            {submissionsAreFree() ? (
+              <>
+                All submissions are free through {freeWeekEndLabel()} (platform make-good). After that, Blind returns
+                to $30 and named lounges resume normal pricing.{" "}
+              </>
+            ) : (
+              <>
+                Blind is $30 and is music only. Music, Film, Music Video, and Creator lounges are{" "}
+                {namedPriceSentence()}.{" "}
+              </>
+            )}
+            {LIMITS_LINE}
           </p>
         </section>
         <section>
@@ -58,14 +68,19 @@ export default function HowPage() {
         </section>
 
         <section>
-          <h2 className="display text-2xl text-paper">Blind — $30 · music only</h2>
+          <h2 className="display text-2xl text-paper">
+            Blind — {submissionsAreFree() ? "free this week" : "$30"} · music only
+          </h2>
           <p className="mt-3">
             This is the talent test for music artists. Paste a YouTube, SoundCloud, Spotify, Audiomack, or TikTok link.
             Your name, page, and following are stripped off until the week closes. The title stays; the artist does not.
             Nobody can campaign “vote for me.” They can only vote for the sound. One Blind entry per 24 hours.
           </p>
           <p className="mt-3">
-            You pay {formatUsd(blind.entryCents)}. {potCapLine()}
+            {submissionsAreFree()
+              ? `Free through ${freeWeekEndLabel()}. Returns to $30 after.`
+              : "You pay $30."}{" "}
+            {potCapLine()}
           </p>
         </section>
 
@@ -80,8 +95,8 @@ export default function HowPage() {
             Paste a link — it plays on Scroll Call®. Each lounge has its own pot. Three entries per lounge per 24 hours.
           </p>
           <p className="mt-3">
-            {namedLoungesAreFree()
-              ? "No charge during beta. Share the link with your fans."
+            {submissionsAreFree()
+              ? `Free through ${freeWeekEndLabel()}. Paid entry resumes after.`
               : `You pay ${formatUsd(floor.entryCents)} for launch. Regular price is $10 a submission.`}{" "}
             {potCapLine()}
           </p>
@@ -96,8 +111,8 @@ export default function HowPage() {
             Paste the link. It plays on Scroll Call®. Keep / Pass still ranks it. You still have a shot at the pot.
           </p>
           <p className="mt-3">
-            {namedLoungesAreFree()
-              ? "No charge during beta. Share the link with your fans."
+            {submissionsAreFree()
+              ? `Free through ${freeWeekEndLabel()}. Paid entry resumes after.`
               : `You pay ${formatUsd(floor.entryCents)} for launch. Regular price is $10 a submission.`}{" "}
             {potCapLine()}
           </p>

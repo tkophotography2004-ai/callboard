@@ -172,6 +172,7 @@ export async function homeData() {
     foundingPassLimit: FOUNDING_PASS_LIMIT,
     weeklyGiveaway: store.weeklyGiveaway,
     fanPotCents: store.chargesLive ? cappedPot(fanWeek.potCents || 0) : 0,
+    fanPotSeedCents: store.chargesLive ? store.fanPotSeedCents || 0 : 0,
     fanLeaders: fanPlaces(store, weekId).slice(0, 3).map(toFan),
     featuredFans,
     featuredFanWeekId: lastFan?.weekId || null,

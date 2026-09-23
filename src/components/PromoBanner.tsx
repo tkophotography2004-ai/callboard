@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FOUNDING_PASS_LINE, WEEKLY_GIVEAWAY_LINE } from "@/lib/rules";
+import { FOUNDING_PASS_LINE, WEEKLY_GIVEAWAY_LINE, freeWeekEndLabel, submissionsAreFree } from "@/lib/rules";
 
 type Giveaway = {
   weekId: string;
@@ -23,6 +23,15 @@ export default function PromoBanner({
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
+      {submissionsAreFree() ? (
+        <div className="mb-4 border border-copper-400/40 bg-black/40 p-5 sm:p-6">
+          <p className="eyebrow">Platform make-good</p>
+          <p className="mt-2 text-sm text-mist">
+            All submissions — including Blind — are free through {freeWeekEndLabel()}. No Stripe charge this window.
+            Founding free-20 codes and Studio passes still work after paid entry resumes.
+          </p>
+        </div>
+      ) : null}
       <div className="border border-copper-400/40 bg-black/40 p-6 sm:p-8">
         <p className="eyebrow">Free submissions</p>
         <h2 className="display mt-3 max-w-3xl text-3xl sm:text-4xl">

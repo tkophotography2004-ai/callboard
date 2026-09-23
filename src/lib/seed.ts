@@ -9,6 +9,7 @@ export async function seedStore(store: Store): Promise<Store> {
   store.payouts = [];
   store.fanWeeks = [];
   store.houseCents = 0;
+  store.fanPotSeedCents = 5000;
   store.chargesLive = true;
   store.chargesLiveAt = new Date().toISOString();
   store.foundingPassCount = 0;

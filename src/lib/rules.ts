@@ -62,16 +62,47 @@ export const ARENA_LABEL: Record<Arena, string> = {
 /** When true, the public cannot sign in, sign up, or enter. */
 export const PUBLIC_CLOSED = false;
 
-/** Named lounges free until this instant (48h open-house). Blind stays $30. */
-export const NAMED_FREE_UNTIL_MS = Date.parse("2026-09-24T16:00:00.000Z"); // Thu Sep 24, 11:00 AM America/Chicago
+/**
+ * Site-wide free submissions through end of Wed Sep 30, 2026 America/Chicago
+ * (Thu Oct 1 00:00 CT). Make-good for platform errors. Blind included.
+ * After this, normal paid entry resumes (Blind $30; named per launch/regular).
+ */
+export const SUBMISSIONS_FREE_UNTIL_MS = Date.parse("2026-10-01T05:00:00.000Z");
 
-/** True while Music / Film / Music Video / Creator entries are free. Blind stays paid. */
-export function namedLoungesAreFree(at = Date.now()) {
-  return at < NAMED_FREE_UNTIL_MS;
+/** @deprecated Prefer SUBMISSIONS_FREE_UNTIL_MS — same instant. */
+export const NAMED_FREE_UNTIL_MS = SUBMISSIONS_FREE_UNTIL_MS;
+
+/** True while every lounge accepts submissions with no Stripe charge. */
+export function submissionsAreFree(at = Date.now()) {
+  return at < SUBMISSIONS_FREE_UNTIL_MS;
 }
 
-/** @deprecated Prefer namedLoungesAreFree() — value frozen at module load. */
+/** Named lounges are free during the site-wide free week. */
+export function namedLoungesAreFree(at = Date.now()) {
+  return submissionsAreFree(at);
+}
+
+/** @deprecated Prefer submissionsAreFree() — value frozen at module load. */
 export const NAMED_LOUNGES_FREE = namedLoungesAreFree();
+
+/** Display date for free-week copy (America/Chicago calendar day free through). */
+export function freeWeekEndLabel() {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(SUBMISSIONS_FREE_UNTIL_MS - 60_000));
+}
+
+export function freeWeekLine(at = Date.now()) {
+  if (!submissionsAreFree(at)) return "";
+  return `Submissions are free through ${freeWeekEndLabel()} (platform make-good). Paid entry resumes after.`;
+}
+
+/** House-fronted fan pot starter (display/accounting seed — not a Stripe charge). */
+export const FAN_POT_SEED_CENTS = 5000;
 /** Launch price for named lounges. */
 export const NAMED_LAUNCH_CENTS = 500;
 /** Regular named-lounge price after the launch window. */
@@ -111,20 +142,22 @@ export function namedPriceSentence(at = Date.now()) {
 
 export function loungeRequiresPayment(arena: Arena, chargesLive: boolean) {
   if (!chargesLive) return false;
-  if (namedLoungesAreFree() && isNamedLounge(arena)) return false;
+  if (submissionsAreFree()) return false;
   const cents = isNamedLounge(arena) ? namedLoungePriceCents() : PRICE[arena].entryCents;
   return cents > 0;
 }
 
 export function arenaPriceLabel(arena: Arena) {
-  if (arena === "blind") return "Blind $30";
   const names: Record<Exclude<Arena, "blind">, string> = {
     tracks: "Music",
     film: "Film",
     video: "Music Video",
     creator: "Creator",
   };
-  if (namedLoungesAreFree()) return `${names[arena]} free`;
+  if (submissionsAreFree()) {
+    return arena === "blind" ? "Blind free" : `${names[arena]} free`;
+  }
+  if (arena === "blind") return "Blind $30";
   if (namedLaunchActive()) return `${names[arena]} $5 launch`;
   return `${names[arena]} $10`;
 }
@@ -182,6 +215,9 @@ export function stripeFeeCents(amountCents: number) {
 }
 
 export function splitEntry(arena: Arena) {
+  if (submissionsAreFree()) {
+    return { entryCents: 0, houseCents: 0, feeCents: 0, fanCents: 0, potCents: 0 };
+  }
   const plan = PRICE[arena];
   const entryCents = isNamedLounge(arena) ? namedLoungePriceCents() : plan.entryCents;
   const houseCents =

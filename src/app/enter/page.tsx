@@ -2,7 +2,7 @@ import Link from "next/link";
 import EnterForm from "@/components/EnterForm";
 import { getSessionUser } from "@/lib/auth";
 import { remainingToday } from "@/lib/queries";
-import { potCapLine } from "@/lib/rules";
+import { freeWeekEndLabel, potCapLine, submissionsAreFree, namedPriceLine } from "@/lib/rules";
 import { stripeEnabled } from "@/lib/stripe";
 import { readStore } from "@/lib/store";
 
@@ -18,8 +18,17 @@ export default async function EnterPage() {
         <p className="mt-4 text-mist">Paste a link. Strangers Keep or Pass. Clicks do not buy first place.</p>
 
         <div className="mt-8 space-y-3">
+          {submissionsAreFree() ? (
+            <div className="border border-copper-400/40 p-4">
+              <p className="text-paper">Free through {freeWeekEndLabel()}</p>
+              <p className="mt-2 text-sm text-mist">
+                Platform make-good — every lounge, including Blind. No Stripe charge this window. Paid entry resumes
+                after.
+              </p>
+            </div>
+          ) : null}
           <div className="border border-white/10 p-4">
-            <p className="text-paper">Blind — $30</p>
+            <p className="text-paper">{submissionsAreFree() ? "Blind — free this week" : "Blind — $30"}</p>
             <p className="mt-2 text-sm text-mist">
               Music only · name hidden · YouTube, SoundCloud, Spotify, Audiomack, TikTok
             </p>
@@ -27,8 +36,9 @@ export default async function EnterPage() {
           <div className="border border-white/10 p-4">
             <p className="text-paper">Music · Film · Music Video · Creator</p>
             <p className="mt-2 text-sm text-mist">
-              $5 launch ($10 regular) · named · Music adds Instagram · Film / Video / Creator: YouTube, TikTok,
-              Instagram, Vimeo
+              {submissionsAreFree()
+                ? "Free this week · named · Music adds Instagram · Film / Video / Creator: YouTube, TikTok, Instagram, Vimeo"
+                : "$5 launch ($10 regular) · named · Music adds Instagram · Film / Video / Creator: YouTube, TikTok, Instagram, Vimeo"}
             </p>
           </div>
           <div className="border border-white/10 p-4">
@@ -67,19 +77,23 @@ export default async function EnterPage() {
       <p className="eyebrow">{payoutLabel}</p>
       <h1 className="display mt-3 text-5xl">Put it on the board</h1>
       <p className="mt-4 text-mist">
-        {store.chargesLive
-          ? "Choose a lounge, paste your link, and go. Keep / Pass ranks the work — not clicks."
-          : "The cash pot is off while the board fills. Submit free. Same Keep / Pass rules."}
+        {!store.chargesLive
+          ? "The cash pot is off while the board fills. Submit free. Same Keep / Pass rules."
+          : submissionsAreFree()
+            ? `Submissions are free through ${freeWeekEndLabel()} — platform make-good. Choose a lounge, paste your link, and go.`
+            : "Choose a lounge, paste your link, and go. Keep / Pass ranks the work — not clicks."}
       </p>
 
       <div className="mt-6 space-y-3">
         <div className="border border-white/10 p-4 text-sm text-mist">
-          <span className="text-paper">Blind $30</span> — music · one per 24h · YouTube, SoundCloud, Spotify,
-          Audiomack, TikTok
+          <span className="text-paper">{submissionsAreFree() ? "Blind free" : "Blind $30"}</span> — music · one per
+          24h · YouTube, SoundCloud, Spotify, Audiomack, TikTok
         </div>
         <div className="border border-white/10 p-4 text-sm text-mist">
-          <span className="text-paper">Named lounges $5 launch</span> — Music, Film, Music Video, Creator · three per
-          24h · {potCapLine()}
+          <span className="text-paper">
+            Named lounges {submissionsAreFree() ? "free" : namedPriceLine()}
+          </span>{" "}
+          — Music, Film, Music Video, Creator · three per 24h · {potCapLine()}
         </div>
       </div>
 

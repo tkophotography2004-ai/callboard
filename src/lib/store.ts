@@ -4,7 +4,7 @@ import { applyFanPayouts, applyPayouts, liveEntries } from "./ranking";
 import { seedStore } from "./seed";
 import { EMPTY_LINKS, type FanWeek, type Store, type Week } from "./types";
 import { isoWeekId, previousWeekId, weekRange } from "./week";
-import { ARENAS, migrateArena, splitEntry, type Arena } from "./rules";
+import { ARENAS, FAN_POT_SEED_CENTS, migrateArena, splitEntry, type Arena } from "./rules";
 import { cappedPot } from "./money";
 import { backfillFoundingPassCodes, ensureWeeklyGiveaway } from "./promo";
 import { stripDemoPlaceholders as stripFakeAccounts } from "./storeCleanup";
@@ -63,6 +63,7 @@ function emptyStore(): Store {
     payouts: [],
     fanWeeks: [],
     houseCents: 0,
+    fanPotSeedCents: FAN_POT_SEED_CENTS,
     chargesLive: true,
     chargesLiveAt: new Date().toISOString(),
     foundingPassCount: 0,
@@ -161,6 +162,11 @@ function migrate(store: Store): Store {
   if (!store.payouts) store.payouts = [];
   if (!store.fanWeeks) store.fanWeeks = [];
   if (!store.houseCents) store.houseCents = 0;
+  // Display/accounting seed only — never charges Stripe/Cash App.
+  if (typeof store.fanPotSeedCents !== "number" || store.fanPotSeedCents < FAN_POT_SEED_CENTS) {
+    store.fanPotSeedCents = FAN_POT_SEED_CENTS;
+    persistAfterMigrate = true;
+  }
   if (store.foundingPassCount === undefined) store.foundingPassCount = 0;
   if (!store.foundingPasses) store.foundingPasses = [];
   if (store.weeklyGiveaway === undefined) store.weeklyGiveaway = null;
@@ -227,9 +233,11 @@ function migrate(store: Store): Store {
   }
   const fan = store.fanWeeks.find((w) => w.weekId === current);
   if (fan && fan.status === "open") {
-    fan.potCents = cappedPot(
-      store.entries.filter((e) => e.weekId === current && e.status === "paid").reduce((s, e) => s + (e.fanCents || 0), 0),
-    );
+    const fromEntries = store.entries
+      .filter((e) => e.weekId === current && e.status === "paid")
+      .reduce((s, e) => s + (e.fanCents || 0), 0);
+    const seed = store.fanPotSeedCents || 0;
+    fan.potCents = cappedPot(fromEntries + seed);
   }
   return store;
 }

@@ -6,17 +6,18 @@ import { linkHelp } from "@/lib/embed";
 import { COVER_ACCEPT, COVER_MAX_BYTES, validateCoverFile } from "@/lib/cover";
 import {
   ARENAS,
-  ARENA_PRICE_LABEL,
+  arenaPriceLabel,
   BRIUNKA_EMAIL,
   BRIUNKA_IP_LINE,
   LINK_ONLY_LINE,
-  namedLoungesAreFree,
+  freeWeekEndLabel,
   PRICE,
   formatUsd,
   potCapLine,
   isAudioLounge,
   loungeRequiresPayment,
   splitEntry,
+  submissionsAreFree,
   type Arena,
 } from "@/lib/rules";
 
@@ -128,7 +129,7 @@ export default function EnterForm({
             onClick={() => setArena(a)}
             className={arena === a ? "btn-copper !px-3" : "btn-ghost !px-3"}
           >
-            {ARENA_PRICE_LABEL[a]}
+            {arenaPriceLabel(a)}
           </button>
         ))}
       </div>
@@ -138,13 +139,14 @@ export default function EnterForm({
         {!chargesLive ? (
           <>
             The cash pot is off while the board fills. Submit free. Same Keep / Pass rules. When the house opens the
-            pot, Blind will be {formatUsd(splitEntry("blind").entryCents)} and tracks/videos{" "}
-            {formatUsd(splitEntry("tracks").entryCents)} — this founding cut will not be charged.
+            pot, Blind will be $30 and named lounges resume normal pricing — this founding cut will not be charged.
           </>
-        ) : namedLoungesAreFree() && arena !== "blind" ? (
+        ) : submissionsAreFree() ? (
           <>
-            Named lounge — free during beta. Paste your link, Keep / Pass ranks the work, and you can share it with
-            fans. Three entries per 24 hours. Blind is still {formatUsd(splitEntry("blind").entryCents)}.
+            Free submissions through {freeWeekEndLabel()} — platform make-good after recent errors. Paste your link,
+            Keep / Pass ranks the work. No Stripe charge this window. After that, Blind returns to $30 and named
+            lounges resume normal paid entry.{" "}
+            {arena === "blind" ? "One Blind entry per 24 hours." : "Three entries per 24 hours."} {potCapLine()}
           </>
         ) : arena === "blind" ? (
           <>
@@ -295,7 +297,9 @@ export default function EnterForm({
             : !chargesLive
               ? "Submit free — pot is off"
               : !mustPay
-                ? "Submit free — beta"
+                ? submissionsAreFree()
+                  ? `Submit free — through ${freeWeekEndLabel()}`
+                  : "Submit free — beta"
                 : stripeReady
                     ? `Pay ${formatUsd(split.entryCents)} on Stripe`
                     : `Submit ${formatUsd(split.entryCents)} (demo)`}
@@ -305,9 +309,11 @@ export default function EnterForm({
           ? `${left} Blind entry left in this 24-hour window.`
           : `${left} of ${PRICE[arena].maxPerDay} entries left in this lounge today.`}
         {!mustPay
-          ? arena === "blind"
-            ? " No charge until the house opens the pot."
-            : " No charge during beta. Share the link with your fans after you submit."
+          ? submissionsAreFree()
+            ? ` No charge through ${freeWeekEndLabel()}. Paid entry resumes after.`
+            : arena === "blind"
+              ? " No charge until the house opens the pot."
+              : " No charge during beta. Share the link with your fans after you submit."
           : stripeReady
             ? " Card or Cash App Pay."
             : " Stripe is not connected, so this would mark paid without a charge."}

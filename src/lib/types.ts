@@ -155,6 +155,11 @@ export type Store = {
   payouts: Payout[];
   fanWeeks: FanWeek[];
   houseCents: number;
+  /**
+   * House-fronted fan pot starter in cents (display + week pot accounting).
+   * Not a Stripe/Cash App charge — Tina fronts winners manually via Cash App.
+   */
+  fanPotSeedCents: number;
   /** When false, entries are free and no prize money is collected. Flip on in /admin. */
   chargesLive: boolean;
   chargesLiveAt: string | null;

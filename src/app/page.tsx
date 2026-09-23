@@ -10,14 +10,14 @@ import {
   ARENA_LABEL,
   FAN_POT_LINE,
   LIMITS_LINE,
-  namedLoungesAreFree,
+  freeWeekEndLabel,
   namedPriceLine,
   namedPriceSentence,
   NOTHING_LIKE_THIS,
   PAYDAY_LINE,
   potCapLine,
   formatUsd,
-
+  submissionsAreFree,
 } from "@/lib/rules";
 import { APP_CREDIT } from "@/lib/config";
 import { homeData } from "@/lib/queries";
@@ -48,9 +48,18 @@ export default async function HomePage() {
             The record stays on.
           </h1>
           <p className="mt-5 max-w-xl text-base text-paper/80">
-            Blind is $30 — music only. Music, Film, Music Video, and Creator lounges are{" "}
-            {namedPriceSentence()}. Strangers Keep or Pass. Clicks cannot buy first place.{" "}
-            {FAN_POT_LINE}
+            {submissionsAreFree() ? (
+              <>
+                All submissions are free through {freeWeekEndLabel()} — platform make-good. Blind returns to $30
+                after; named lounges resume normal pricing.{" "}
+              </>
+            ) : (
+              <>
+                Blind is $30 — music only. Music, Film, Music Video, and Creator lounges are{" "}
+                {namedPriceSentence()}.{" "}
+              </>
+            )}
+            Strangers Keep or Pass. Clicks cannot buy first place. {FAN_POT_LINE}
           </p>
           <p className="mt-3 max-w-xl text-sm text-paper/70">
             {potCapLine()} {PAYDAY_LINE} {LIMITS_LINE}
@@ -80,12 +89,21 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl px-4 py-6">
         <div className="border border-copper-400/40 bg-black/40 p-6 sm:p-8">
-          <p className="eyebrow">Fan pot · this week</p>
+          <p className="eyebrow">
+            Fan pot · this week
+            {data.fanPotSeedCents > 0 ? " · starter · house-fronted" : ""}
+          </p>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <h2 className="display text-4xl sm:text-5xl">Judge. Earn. Come back.</h2>
             <p className="display text-4xl text-copper-200">{formatUsd(data.fanPotCents)}</p>
           </div>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-mist">
+            {data.fanPotSeedCents > 0 ? (
+              <>
+                The house fronted {formatUsd(data.fanPotSeedCents)} to start the fan pot this week. Entry fees that land
+                in the fan share stack on top.{" "}
+              </>
+            ) : null}
             {FAN_POT_LINE} Sign in, Keep or Pass, and keep a Cash App cashtag in Studio. Top fans of the week get paid
             and a featured spot with their socials.
           </p>
@@ -116,7 +134,11 @@ export default async function HomePage() {
       <section className="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 lg:grid-cols-5">
         {ARENAS.map((arena) => {
           const lounge = data[arena];
-          const price = arena === "blind" ? "$30" : namedPriceLine();
+          const price = submissionsAreFree()
+            ? "free"
+            : arena === "blind"
+              ? "$30"
+              : namedPriceLine();
           return (
             <a
               key={arena}
