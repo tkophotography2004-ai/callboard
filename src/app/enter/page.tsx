@@ -15,14 +15,29 @@ export default async function EnterPage() {
       <div className="mx-auto max-w-lg px-4 py-16">
         <p className="eyebrow">Two ways in</p>
         <h1 className="display mt-3 text-5xl">Enter the board</h1>
-        <p className="mt-4 text-mist">
-          Blind is $30 and music only — name hidden. Track, Film, Music Video, and Creator lounges are $5 for launch
-          (regular price is $10 a submission) and named.
-          Link only for now: Blind — YouTube, SoundCloud, Spotify, Audiomack, or TikTok; Track — those plus Instagram;
-          Film / Music Video / Creator — YouTube, TikTok, Instagram, or Vimeo. Keep / Pass ranks the work, not clicks.
-          Valid email required. Cash App or PayPal optional — add in Studio anytime so you are ready when the pot opens.
-        </p>
-        <div className="mt-8 flex gap-3">
+        <p className="mt-4 text-mist">Paste a link. Strangers Keep or Pass. Clicks do not buy first place.</p>
+
+        <div className="mt-8 space-y-3">
+          <div className="border border-white/10 p-4">
+            <p className="text-paper">Blind — $30</p>
+            <p className="mt-2 text-sm text-mist">
+              Music only · name hidden · YouTube, SoundCloud, Spotify, Audiomack, TikTok
+            </p>
+          </div>
+          <div className="border border-white/10 p-4">
+            <p className="text-paper">Track · Film · Music Video · Creator</p>
+            <p className="mt-2 text-sm text-mist">
+              $5 launch ($10 regular) · named · Track adds Instagram · Film / Video / Creator: YouTube, TikTok,
+              Instagram, Vimeo
+            </p>
+          </div>
+          <div className="border border-white/10 p-4">
+            <p className="text-paper">Keep / Pass ranks the work</p>
+            <p className="mt-2 text-sm text-mist">Valid email required · Cash App / PayPal optional in Studio</p>
+          </div>
+        </div>
+
+        <div className="mt-10 flex gap-3">
           <Link href="/signup?next=/enter" className="btn-copper">
             Create account
           </Link>
@@ -53,9 +68,21 @@ export default async function EnterPage() {
       <h1 className="display mt-3 text-5xl">Put it on the board</h1>
       <p className="mt-4 text-mist">
         {store.chargesLive
-          ? `Blind is $30 — music tracks (YouTube, SoundCloud, Spotify, Audiomack, or TikTok), one per 24 hours. Track, Film, Music Video, and Creator lounges are $5 for launch (regular $10 a submission), three per 24 hours. Track also allows Instagram. Film / Music Video / Creator: YouTube, TikTok, Instagram, or Vimeo. Keep / Pass ranks the work. ${potCapLine()} The week closes Sunday. Cash App or PayPal payouts are sent within 10 days of the crown.`
-          : "The cash pot is off while the board fills. Enter free. Same judging. When the house opens the pot, new Blind entries will be $30 and the $5 lounges open."}
+          ? "Choose a lounge, paste your link, and go. Keep / Pass ranks the work — not clicks."
+          : "The cash pot is off while the board fills. Enter free. Same Keep / Pass rules."}
       </p>
+
+      <div className="mt-6 space-y-3">
+        <div className="border border-white/10 p-4 text-sm text-mist">
+          <span className="text-paper">Blind $30</span> — music · one per 24h · YouTube, SoundCloud, Spotify,
+          Audiomack, TikTok
+        </div>
+        <div className="border border-white/10 p-4 text-sm text-mist">
+          <span className="text-paper">Named lounges $5 launch</span> — Track, Film, Music Video, Creator · three per
+          24h · {potCapLine()}
+        </div>
+      </div>
+
       {(user.freePasses || 0) > 0 && (
         <p className="mt-4 border border-copper-400/40 p-4 text-sm">
           You have {user.freePasses} free {user.freePasses === 1 ? "pass" : "passes"}. Check the box on the form, or
@@ -64,8 +91,11 @@ export default async function EnterPage() {
       )}
       {!hasPayout && (
         <p className="mt-4 border border-white/15 p-4 text-sm text-mist">
-          Tip: add Cash App or PayPal in <Link href="/studio" className="text-copper-300">Studio</Link> so Tina can
-          pay you if you place. Not required to enter.
+          Tip: add Cash App or PayPal in{" "}
+          <Link href="/studio" className="text-copper-300">
+            Studio
+          </Link>{" "}
+          so Tina can pay you if you place. Not required to enter.
         </p>
       )}
       <EnterForm
