@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
-import { formatUsd, ARENA_LABEL, ARENAS } from "@/lib/rules";
+import { formatUsd, ARENA_LABEL, ARENAS, FOUNDING_PASS_LIMIT } from "@/lib/rules";
 import { currentWeeks, readStore } from "@/lib/store";
 import { isoWeekId, previousWeekId, weekLabel } from "@/lib/week";
 import { collectCrateWinners } from "@/lib/crate";
@@ -29,6 +29,11 @@ export default async function AdminPage() {
   const fanPrev = store.fanWeeks.find((w) => w.weekId === prevWeekId);
   const artists = store.users.length;
   const paid = store.entries.filter((e) => e.status === "paid").length;
+  const foundingPasses = [...(store.foundingPasses || [])].sort(
+    (a, b) => Date.parse(a.awardedAt) - Date.parse(b.awardedAt),
+  );
+  const foundingClaimed = Math.min(store.foundingPassCount || foundingPasses.length, FOUNDING_PASS_LIMIT);
+  const foundingLeft = Math.max(0, FOUNDING_PASS_LIMIT - foundingClaimed);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
@@ -62,6 +67,57 @@ export default async function AdminPage() {
                 </li>
               ))}
           </ul>
+        )}
+      </section>
+
+
+      <section className="mt-8 border border-white/10 p-6">
+        <p className="eyebrow">Founding free 20</p>
+        <h2 className="display mt-2 text-3xl">
+          {foundingClaimed} of {FOUNDING_PASS_LIMIT} claimed · {foundingLeft} left
+        </h2>
+        <p className="mt-2 text-sm text-mist">
+          First {FOUNDING_PASS_LIMIT} artists who land a paid/founding entry earn a free future submission code
+          (SC-XXXXXX). Unused codes can be pasted on Enter.
+        </p>
+        {foundingPasses.length === 0 ? (
+          <p className="mt-4 text-sm text-mist">No founding passes awarded yet.</p>
+        ) : (
+          <ul className="mt-5 divide-y divide-white/10">
+            {foundingPasses.map((pass, i) => {
+              const unused = !pass.usedAt;
+              return (
+                <li
+                  key={pass.code}
+                  className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
+                >
+                  <div>
+                    <p className="text-paper">
+                      #{i + 1} · {pass.displayName || pass.username}{" "}
+                      <span className="font-mono text-copper-200">{pass.code}</span>
+                    </p>
+                    <p className="text-sm text-mist">
+                      @{pass.username} · {pass.email} · awarded{" "}
+                      {new Date(pass.awardedAt).toLocaleString()}
+                      {pass.entryId ? ` · entry ${pass.entryId}` : ""}
+                    </p>
+                  </div>
+                  <p
+                    className={`text-xs uppercase tracking-[0.16em] ${
+                      unused ? "text-copper-300" : "text-white/40"
+                    }`}
+                  >
+                    {unused ? "unused free pass" : `used ${new Date(pass.usedAt!).toLocaleString()}`}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {foundingLeft > 0 && (
+          <p className="mt-4 text-xs uppercase tracking-[0.16em] text-white/40">
+            {foundingLeft} open slot{foundingLeft === 1 ? "" : "s"} remaining
+          </p>
         )}
       </section>
 
