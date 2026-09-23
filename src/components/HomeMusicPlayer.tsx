@@ -102,7 +102,11 @@ export default function HomeMusicPlayer({ tracks }: Props) {
     clearAdvance();
     if (!current || !playing || !playIntent) return;
     if (current.kind === "file") return; // use onEnded
-    const ms = Math.max(15, Math.min(current.durationSeconds || 45, 600)) * 1000;
+    // Unknown/short metadata must not cut an embed off at an arbitrary preview length.
+    // Let the platform player run until its real end; only timed-advance known full tracks.
+    const durationSeconds = Number(current.durationSeconds);
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 60) return;
+    const ms = Math.min(durationSeconds, 20 * 60) * 1000;
     advanceTimer.current = setTimeout(() => {
       if (tracks.length <= 1) {
         setPlaying(false);
