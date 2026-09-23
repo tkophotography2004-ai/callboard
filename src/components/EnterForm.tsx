@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FreePassFields from "@/components/FreePassFields";
 import { linkHelp } from "@/lib/embed";
 import {
   ARENAS,
@@ -32,7 +33,6 @@ export default function EnterForm({
   const [arena, setArena] = useState<Arena>("blind");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [usePass, setUsePass] = useState(false);
   const split = splitEntry(arena);
   const left = remaining[arena];
   const audio = isAudioLounge(arena);
@@ -68,19 +68,20 @@ export default function EnterForm({
       window.location.href = json.checkoutUrl;
       return;
     }
+    const codeQ = json.passCode ? `&code=${encodeURIComponent(json.passCode)}` : "";
     if (json.awardedPass) {
-      window.location.href = json.pass ? `/studio?pass=1&usedpass=1` : `/studio?pass=1`;
+      window.location.href = json.pass ? `/studio?pass=1&usedpass=1${codeQ}` : `/studio?pass=1${codeQ}`;
       return;
     }
     if (json.pass) {
-      window.location.href = `/studio?usedpass=1`;
+      window.location.href = `/studio?usedpass=1${codeQ}`;
       return;
     }
     if (json.beta) {
-      window.location.href = `/studio?beta=1`;
+      window.location.href = `/studio?beta=1${codeQ}`;
       return;
     }
-    window.location.href = json.founding ? `/studio?founding=1` : `/studio?paid=1`;
+    window.location.href = json.founding ? `/studio?founding=1${codeQ}` : `/studio?paid=1${codeQ}`;
   }
 
   return (
@@ -212,18 +213,7 @@ export default function EnterForm({
               : ""}
         </span>
       </label>
-      {freePasses > 0 && mustPay && (
-        <label className="flex items-center gap-3 text-sm text-paper">
-          <input
-            type="checkbox"
-            name="useFreePass"
-            value="1"
-            checked={usePass}
-            onChange={(e) => setUsePass(e.target.checked)}
-          />
-          Use a free pass ({freePasses} left) — no charge this time
-        </label>
-      )}
+      <FreePassFields freePasses={freePasses} mustPay={mustPay} />
       <p className="text-xs text-white/45">{LINK_ONLY_LINE}</p>
       {error && <p className="text-sm text-copper-300">{error}</p>}
       <button type="submit" disabled={busy || left <= 0} className="btn-copper w-full disabled:opacity-50">
@@ -235,9 +225,7 @@ export default function EnterForm({
               ? "Enter free — pot is off"
               : !mustPay
                 ? "Enter free — beta"
-                : usePass
-                  ? "Use a free pass"
-                  : stripeReady
+                : stripeReady
                     ? `Pay ${formatUsd(split.entryCents)} on Stripe`
                     : `Enter ${formatUsd(split.entryCents)} (demo)`}
       </button>
