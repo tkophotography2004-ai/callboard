@@ -231,17 +231,8 @@ export function normalizeCashtag(raw: string) {
   return `$${t}`;
 }
 
-export function emailOk(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
-}
+export { emailOk, normalizePaypalEmail } from "./email";
 
 export function usernameOk(name: string) {
   return /^[a-z0-9_]{3,20}$/.test(name);
-}
-
-export function normalizePaypalEmail(raw: string) {
-  const t = raw.trim().toLowerCase();
-  if (!t) return "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return null;
-  return t;
 }
