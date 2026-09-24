@@ -1,7 +1,37 @@
 {
   "framework": "nextjs",
   "redirects": [
-    { "source": "/scroll-call", "destination": "/", "permanent": false },
-    { "source": "/scroll-call/:path*", "destination": "/:path*", "permanent": false }
+    {
+      "source": "/scroll-call",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/scroll-call/:path*",
+      "destination": "/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.scrollcalllive.com"
+        }
+      ],
+      "destination": "https://scrollcalllive.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.scrollcalllive.com"
+        }
+      ],
+      "destination": "https://scrollcalllive.com/",
+      "permanent": true
+    }
   ]
 }

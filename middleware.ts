@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/** Canonical host: www to apex (308). Apex and preview hosts pass through. */
+/** Canonical host: www to apex (308). */
 export function middleware(req: NextRequest) {
-  const host = (req.headers.get("host") || "").toLowerCase().split(":")[0];
+  const raw =
+    req.headers.get("x-forwarded-host") ||
+    req.headers.get("host") ||
+    "";
+  const host = raw.toLowerCase().split(",")[0].trim().split(":")[0];
   if (host === "www.scrollcalllive.com") {
     const url = req.nextUrl.clone();
     url.protocol = "https:";
@@ -14,5 +18,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: ["/:path*"],
 };
