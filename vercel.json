@@ -2,6 +2,11 @@
   "framework": "nextjs",
   "redirects": [
     {
+      "source": "/fan-pot",
+      "destination": "/join",
+      "permanent": true
+    },
+    {
       "source": "/scroll-call",
       "destination": "/",
       "permanent": false

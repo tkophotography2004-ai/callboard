@@ -60,13 +60,21 @@ function storeStamp(store: Store) {
   return store.users.length * 1_000_000 + store.entries.length * 1_000 + store.votes.length;
 }
 
+/** True when `a` is a fresher write than `b` (write counter first, then legacy size stamp). */
+function isAhead(a: Store, b: Store) {
+  const ra = a.rev || 0;
+  const rb = b.rev || 0;
+  if (ra !== rb) return ra > rb;
+  return storeStamp(a) > storeStamp(b);
+}
+
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
 /** Prefer in-isolate write-ahead memory when Blob is still catching up. */
 function preferFresher(fromBlob: Store): Store {
-  if (memory && memoryWrittenAt > 0 && storeStamp(memory) > storeStamp(fromBlob)) {
+  if (memory && memoryWrittenAt > 0 && isAhead(memory, fromBlob)) {
     return memory;
   }
   memory = fromBlob;
@@ -191,6 +199,8 @@ function migrate(store: Store): Store {
   if (!store.foundingPasses) store.foundingPasses = [];
   if (store.weeklyGiveaway === undefined) store.weeklyGiveaway = null;
   if (!store.passwordResets) store.passwordResets = [];
+  if (!store.fans) store.fans = [];
+  if (!store.fanRate) store.fanRate = {};
   if (stripDemoPlaceholders(store)) {
     store.chargesLive = true;
     store.chargesLiveAt = store.chargesLiveAt || new Date().toISOString();
@@ -288,7 +298,7 @@ async function loadFromSource(opts?: { allowSeedWrite?: boolean }): Promise<Stor
   if (raw) {
     const store = migrate(JSON.parse(raw) as Store);
     // Do not clobber a fresher in-isolate write when Blob is still lagging.
-    if (ahead && aheadAt > 0 && storeStamp(ahead) > storeStamp(store)) {
+    if (ahead && aheadAt > 0 && isAhead(ahead, store)) {
       memory = ahead;
       memoryWrittenAt = aheadAt;
       return ahead;
@@ -357,6 +367,7 @@ async function load(): Promise<Store> {
 }
 
 async function persist(store: Store) {
+  store.rev = (store.rev || 0) + 1;
   const json = JSON.stringify(store, null, 2);
   memory = store;
   memoryWrittenAt = Date.now();

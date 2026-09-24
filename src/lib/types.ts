@@ -155,7 +155,31 @@ export type PasswordReset = {
   createdAt: string;
 };
 
+export type FanStatus = "pending" | "confirmed" | "unsubscribed";
+
+export type FanContact = {
+  id: string;
+  firstName: string;
+  email: string;
+  status: FanStatus;
+  ref: string;
+  /** True for internal test signups (ref starting with "test"). Excluded from counts. */
+  test: boolean;
+  confirmTokenHash: string;
+  confirmExpiresAt: string;
+  unsubToken: string;
+  createdAt: string;
+  confirmedAt: string | null;
+  unsubscribedAt: string | null;
+  lastSentAt: string;
+};
+
 export type Store = {
+  /** Monotonic write counter used to detect a fresher write-ahead copy vs lagging Blob. */
+  rev?: number;
+  fans?: FanContact[];
+  /** Fan pot join attempts per hashed IP (epoch ms), for rate limiting. */
+  fanRate?: Record<string, number[]>;
   users: User[];
   entries: Entry[];
   votes: Vote[];

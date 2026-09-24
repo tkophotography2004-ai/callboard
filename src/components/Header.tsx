@@ -14,6 +14,9 @@ export default function Header({ user }: { user: SessionUser | null }) {
           <span className="block text-[10px] uppercase tracking-[0.18em] text-mist">{APP_CREDIT}</span>
         </Link>
         <nav className="flex items-center gap-3 text-[12px] uppercase tracking-[0.2em] text-mist sm:gap-5">
+          <a href="/join" className="hidden hover:text-copper-200 sm:inline">
+            Fan Pot
+          </a>
           {user ? (
             <a href="/studio" className="text-copper-300 hover:text-copper-200">
               Studio

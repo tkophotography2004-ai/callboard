@@ -7,6 +7,7 @@ import { collectCrateWinners } from "@/lib/crate";
 import AdminCharges from "./charges";
 import AdminCrate from "./crate";
 import AdminPayouts from "./ui";
+import AdminFans from "./fans";
 
 export const metadata = { title: "Admin" };
 
@@ -34,6 +35,10 @@ export default async function AdminPage() {
   );
   const foundingClaimed = Math.min(store.foundingPassCount || foundingPasses.length, FOUNDING_PASS_LIMIT);
   const foundingLeft = Math.max(0, FOUNDING_PASS_LIMIT - foundingClaimed);
+  const fans = [...(store.fans || [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const realFans = fans.filter((f) => !f.test);
+  const confirmedFans = realFans.filter((f) => f.status === "confirmed").length;
+  const pendingFans = realFans.filter((f) => f.status === "pending").length;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
@@ -70,6 +75,32 @@ export default async function AdminPage() {
         )}
       </section>
 
+
+      <section className="mt-8 border border-white/10 p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <p className="eyebrow">Fan pot list</p>
+            <h2 className="display mt-2 text-3xl">
+              {confirmedFans} confirmed · {pendingFans} pending
+            </h2>
+          </div>
+          <a href="/api/admin/fans" className="btn-ghost !px-4 !py-2">
+            Download CSV
+          </a>
+        </div>
+        <p className="mt-2 text-sm text-mist">Double opt-in signups from /join. Test signups are excluded from counts.</p>
+        <AdminFans
+          rows={fans.map((f) => ({
+            id: f.id,
+            firstName: f.firstName,
+            email: f.email,
+            status: f.status,
+            createdAt: f.createdAt,
+            ref: f.ref,
+            test: f.test,
+          }))}
+        />
+      </section>
 
       <section className="mt-8 border border-white/10 p-6">
         <p className="eyebrow">Founding free 20</p>

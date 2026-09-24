@@ -169,3 +169,82 @@ export async function sendPasswordResetEmail(mail: ResetMail): Promise<boolean> 
     return false;
   }
 }
+
+export type OutgoingMail = {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  headers?: Record<string, string>;
+};
+
+/** Send one email through the site's Gmail SMTP setup (same transport as signup alerts / password reset). */
+export async function sendSiteMail(mail: OutgoingMail): Promise<boolean> {
+  if (!process.env.SMTP_PASS) {
+    console.error("sendSiteMail: SMTP_PASS not set");
+    return false;
+  }
+  try {
+    const nodemailer = await import("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER || notifyFrom(),
+        pass: process.env.SMTP_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: `${APP_NAME_MARK} <${notifyFrom()}>`,
+      to: mail.to,
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html,
+      headers: mail.headers,
+    });
+    return true;
+  } catch (err) {
+    console.error("sendSiteMail failed", err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
+export type FanNotice = {
+  firstName: string;
+  email: string;
+  ref: string;
+  confirmedAt: string;
+  test: boolean;
+};
+
+/** House alert (to NOTIFY_TO) when a fan confirms — same Gmail alert path as new accounts. */
+export async function notifyHouseFan(fan: FanNotice) {
+  const subject = `${APP_NAME_MARK} fan pot — ${fan.firstName} confirmed${fan.test ? " (TEST)" : ""}`;
+  const body = [
+    `A new fan just confirmed for the ${APP_NAME_MARK} fan pot.`,
+    "",
+    `Name: ${fan.firstName}`,
+    `Email: ${fan.email}`,
+    `Ref: ${fan.ref || "(none)"}`,
+    `Time: ${fan.confirmedAt}`,
+    fan.test ? "Marked as TEST signup." : "",
+    "",
+    `Admin: ${siteUrl()}/admin`,
+  ]
+    .filter((l, i, a) => l !== "" || a[i - 1] !== "")
+    .join("\n");
+  try {
+    await logSignup(subject, body);
+  } catch {
+    /* keep going */
+  }
+  try {
+    if (process.env.SMTP_PASS) {
+      const sent = await sendSmtp(subject, body);
+      if (sent) return;
+    }
+  } catch {
+    /* alert must not break confirm */
+  }
+}
