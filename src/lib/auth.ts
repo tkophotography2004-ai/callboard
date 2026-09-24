@@ -18,6 +18,23 @@ function secret() {
   return process.env.CALLBOARD_SECRET || "callboard-dev-secret-change-me";
 }
 
+/** Secure cookies on HTTPS / Vercel production; leave off for local http. */
+function cookieSecure() {
+  if (process.env.COOKIE_SECURE === "0") return false;
+  if (process.env.COOKIE_SECURE === "1") return true;
+  return process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+}
+
+function sessionCookieOpts(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: cookieSecure(),
+    sameSite: "lax" as const,
+    path: cookiePath(),
+    maxAge,
+  };
+}
+
 function sign(userId: string) {
   const exp = Date.now() + MAX_AGE * 1000;
   const body = Buffer.from(JSON.stringify({ userId, exp })).toString("base64url");
@@ -60,17 +77,16 @@ export function toSession(user: User): SessionUser {
 
 export async function setSession(userId: string) {
   const jar = await cookies();
-  jar.set(COOKIE, sign(userId), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: cookiePath(),
-    maxAge: MAX_AGE,
-  });
+  jar.set(COOKIE, sign(userId), sessionCookieOpts(MAX_AGE));
 }
 
 export async function clearSession() {
   const jar = await cookies();
-  jar.delete(COOKIE);
+  // delete() drops Secure/HttpOnly on some runtimes — clear with full attrs.
+  jar.set(COOKIE, "", {
+    ...sessionCookieOpts(0),
+    expires: new Date(0),
+  });
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -91,17 +107,15 @@ export async function setAdminCookie() {
     "base64url",
   );
   const sig = createHmac("sha256", secret()).update(body).digest("base64url");
-  jar.set(ADMIN_COOKIE, `${body}.${sig}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: cookiePath(),
-    maxAge: MAX_AGE,
-  });
+  jar.set(ADMIN_COOKIE, `${body}.${sig}`, sessionCookieOpts(MAX_AGE));
 }
 
 export async function clearAdminCookie() {
   const jar = await cookies();
-  jar.delete(ADMIN_COOKIE);
+  jar.set(ADMIN_COOKIE, "", {
+    ...sessionCookieOpts(0),
+    expires: new Date(0),
+  });
 }
 
 export async function isAdmin() {

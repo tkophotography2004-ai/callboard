@@ -147,6 +147,14 @@ export type FoundingPass = {
   usedAt: string | null;
 };
 
+export type PasswordReset = {
+  tokenHash: string;
+  userId: string;
+  email: string;
+  expiresAt: string;
+  createdAt: string;
+};
+
 export type Store = {
   users: User[];
   entries: Entry[];
@@ -154,6 +162,7 @@ export type Store = {
   weeks: Week[];
   payouts: Payout[];
   fanWeeks: FanWeek[];
+  passwordResets: PasswordReset[];
   houseCents: number;
   /**
    * House-fronted fan pot starter in cents (display + week pot accounting).

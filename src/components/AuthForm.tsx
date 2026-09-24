@@ -93,6 +93,11 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
       <button type="submit" disabled={busy} className="btn-copper w-full">
         {busy ? "Please wait…" : signup ? "Create account" : "Sign in"}
       </button>
+      {!signup && (
+        <p className="text-center text-sm text-mist">
+          <Link href="/forgot-password" className="text-copper-300">Forgot password?</Link>
+        </p>
+      )}
       <p className="text-center text-sm text-mist">
         {signup ? (
           <>

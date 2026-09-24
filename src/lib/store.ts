@@ -52,7 +52,26 @@ async function writeBlobJson(json: string) {
 
 
 let memory: Store | null = null;
+/** Wall time of last successful persist into `memory` (write-ahead for Blob lag). */
+let memoryWrittenAt = 0;
 let queue: Promise<unknown> = Promise.resolve();
+
+function storeStamp(store: Store) {
+  return store.users.length * 1_000_000 + store.entries.length * 1_000 + store.votes.length;
+}
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Prefer in-isolate write-ahead memory when Blob is still catching up. */
+function preferFresher(fromBlob: Store): Store {
+  if (memory && memoryWrittenAt > 0 && storeStamp(memory) > storeStamp(fromBlob)) {
+    return memory;
+  }
+  memory = fromBlob;
+  return fromBlob;
+}
 
 function emptyStore(): Store {
   return {
@@ -69,6 +88,7 @@ function emptyStore(): Store {
     foundingPassCount: 0,
     foundingPasses: [],
     weeklyGiveaway: null,
+    passwordResets: [],
   };
 }
 
@@ -170,6 +190,7 @@ function migrate(store: Store): Store {
   if (store.foundingPassCount === undefined) store.foundingPassCount = 0;
   if (!store.foundingPasses) store.foundingPasses = [];
   if (store.weeklyGiveaway === undefined) store.weeklyGiveaway = null;
+  if (!store.passwordResets) store.passwordResets = [];
   if (stripDemoPlaceholders(store)) {
     store.chargesLive = true;
     store.chargesLiveAt = store.chargesLiveAt || new Date().toISOString();
@@ -261,9 +282,17 @@ async function readRawStoreJson(): Promise<string | null> {
 
 /** Fresh load from Blob/disk. Never serves a stale in-process snapshot for writes. */
 async function loadFromSource(opts?: { allowSeedWrite?: boolean }): Promise<Store> {
+  const ahead = memory;
+  const aheadAt = memoryWrittenAt;
   const raw = await readRawStoreJson();
   if (raw) {
     const store = migrate(JSON.parse(raw) as Store);
+    // Do not clobber a fresher in-isolate write when Blob is still lagging.
+    if (ahead && aheadAt > 0 && storeStamp(ahead) > storeStamp(store)) {
+      memory = ahead;
+      memoryWrittenAt = aheadAt;
+      return ahead;
+    }
     memory = store;
     if (persistAfterMigrate) {
       persistAfterMigrate = false;
@@ -282,12 +311,32 @@ async function loadFromSource(opts?: { allowSeedWrite?: boolean }): Promise<Stor
   return memory!;
 }
 
+async function loadFromSourceRetrying(opts?: { allowSeedWrite?: boolean }): Promise<Store> {
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
+      const store = await loadFromSource(opts);
+      return preferFresher(store);
+    } catch (err) {
+      lastErr = err;
+      // Brief backoff for Blob eventual consistency after a recent write.
+      await sleep(120 + attempt * 180);
+    }
+  }
+  if (memory) return memory;
+  throw lastErr instanceof Error ? lastErr : new Error("no store");
+}
+
 async function load(): Promise<Store> {
-  // On Blob-backed deploys, always read through to source for correctness across
-  // serverless isolates. Never seed-overwrite Blob on a transient read failure.
+  // On Blob-backed deploys, read through to source but keep write-ahead memory so
+  // signup → login /me on the same isolate is immediate despite Blob lag.
   if (blobEnabled()) {
-    const store = await loadFromSource({ allowSeedWrite: false });
-    return store;
+    // Hot path: recent local write (same serverless isolate).
+    if (memory && Date.now() - memoryWrittenAt < 60_000) {
+      migrate(memory);
+      return memory;
+    }
+    return await loadFromSourceRetrying({ allowSeedWrite: false });
   }
   if (memory) {
     migrate(memory);
@@ -309,6 +358,8 @@ async function load(): Promise<Store> {
 
 async function persist(store: Store) {
   const json = JSON.stringify(store, null, 2);
+  memory = store;
+  memoryWrittenAt = Date.now();
   await writeBlobJson(json);
   await fs.mkdir(path.dirname(filePath()), { recursive: true });
   const dest = filePath();
@@ -327,12 +378,21 @@ export async function readStore() {
 
 export async function updateStore<T>(fn: (store: Store) => T | Promise<T>): Promise<T> {
   const run = queue.then(async () => {
-    // Always re-read Blob before mutating. Process-local `memory` across warm
-    // serverless isolates caused lost-update races (submit then judge wipe).
-    const store = await loadFromSource({ allowSeedWrite: false });
+    // Re-read Blob, but keep write-ahead memory if Blob is still lagging so we
+    // do not wipe a user that was just signed up on this isolate.
+    let store: Store;
+    try {
+      store = await loadFromSource({ allowSeedWrite: false });
+      store = preferFresher(store);
+    } catch (err) {
+      if (memory) {
+        store = memory;
+      } else {
+        throw err;
+      }
+    }
     migrate(store);
     const result = await fn(store);
-    memory = store;
     await persist(store);
     return result;
   });
