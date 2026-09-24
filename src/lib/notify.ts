@@ -1,6 +1,6 @@
 import { appendFile, mkdir } from "fs/promises";
 import { join } from "path";
-import { APP_NAME_MARK, siteUrl } from "./config";
+import { APP_NAME, APP_NAME_MARK, siteUrl } from "./config";
 import { BRIUNKA_EMAIL } from "./rules";
 
 export type SignupNotice = {
@@ -178,6 +178,12 @@ export type OutgoingMail = {
   headers?: Record<string, string>;
 };
 
+function fromHeader() {
+  const f = notifyFrom();
+  // NOTIFY_FROM may already carry a display name ("Name <addr>"); only wrap a bare address.
+  return f.includes("<") ? f : `${APP_NAME} <${f}>`;
+}
+
 /** Send one email through the site's Gmail SMTP setup (same transport as signup alerts / password reset). */
 export async function sendSiteMail(mail: OutgoingMail): Promise<boolean> {
   if (!process.env.SMTP_PASS) {
@@ -195,15 +201,16 @@ export async function sendSiteMail(mail: OutgoingMail): Promise<boolean> {
         pass: process.env.SMTP_PASS,
       },
     });
-    await transporter.sendMail({
-      from: `${APP_NAME_MARK} <${notifyFrom()}>`,
+    const info = await transporter.sendMail({
+      from: fromHeader(),
       to: mail.to,
       subject: mail.subject,
       text: mail.text,
       html: mail.html,
       headers: mail.headers,
     });
-    return true;
+    console.log("sendSiteMail ok", { accepted: info.accepted?.length || 0, rejected: info.rejected?.length || 0, response: String(info.response || "").slice(0, 80) });
+    return (info.accepted?.length || 0) > 0;
   } catch (err) {
     console.error("sendSiteMail failed", err instanceof Error ? err.message : err);
     return false;
