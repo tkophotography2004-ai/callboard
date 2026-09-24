@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import FreePassFields from "@/components/FreePassFields";
+import TermsNotice from "@/components/TermsNotice";
 import { linkHelp } from "@/lib/embed";
 import { COVER_ACCEPT, COVER_MAX_BYTES, validateCoverFile } from "@/lib/cover";
 import {
@@ -289,6 +290,7 @@ export default function EnterForm({
       <FreePassFields freePasses={freePasses} mustPay={mustPay} />
       <p className="text-xs text-white/45">{LINK_ONLY_LINE}</p>
       {error && <p className="text-sm text-copper-300">{error}</p>}
+      <TermsNotice />
       <button type="submit" disabled={busy || left <= 0} className="btn-copper w-full disabled:opacity-50">
         {busy
           ? "Sending…"

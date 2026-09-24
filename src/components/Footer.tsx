@@ -35,6 +35,9 @@ export default function Footer() {
           <Link href="/board/creator" className="hover:text-copper-200">
             Creator
           </Link>
+          <Link href="/terms" className="text-paper hover:text-copper-200">
+            Terms
+          </Link>
         </div>
       </div>
       <p className="mx-auto mt-6 max-w-6xl text-xs text-white/40">
