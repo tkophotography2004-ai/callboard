@@ -41,6 +41,9 @@ export default async function StudioPage({
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .map((e) => ({
       ...toPublic(store, e),
+      // Owner always sees their own real title; public views stay masked.
+      title: e.title,
+      shareTitle: toPublic(store, e).title,
       status: e.status,
       weekId: e.weekId,
       potCents: e.potCents,
@@ -152,7 +155,7 @@ export default async function StudioPage({
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 {e.status === "paid" && !e.hiddenArtist && (
-                  <ShareBar compact url={entryUrl(e.slug)} title={e.title} />
+                  <ShareBar compact url={entryUrl(e.slug)} title={e.shareTitle} />
                 )}
                 <p className="text-sm text-mist">{e.heatVotes} heat</p>
               </div>
