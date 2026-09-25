@@ -51,6 +51,15 @@ export const EMPTY_LINKS: ArtistLinks = {
   other: "",
 };
 
+/** Server-only pointer to a Blind audio file. Never sent to the browser. */
+export type BlindAudio = {
+  store: "blob" | "local";
+  /** Blob pathname (private access) or local filename. */
+  key: string;
+  contentType: string;
+  bytes: number;
+};
+
 export type EntryStatus = "draft" | "paid" | "removed";
 
 export type Entry = {
@@ -81,6 +90,8 @@ export type Entry = {
   heatVotes: number;
   playCount: number;
   links: ArtistLinks;
+  /** Blind audio upload (server-only). Blind entries without it are legacy link entries. */
+  audio?: BlindAudio;
 };
 
 export type VoteKind = "scout" | "heat";

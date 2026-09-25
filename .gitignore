@@ -9,3 +9,5 @@ data/media
 
 .vercel
 .env*
+data/blind-incoming
+data/blind-audio

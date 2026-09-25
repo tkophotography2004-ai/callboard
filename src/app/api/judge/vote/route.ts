@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return {
       keep,
       title: hide ? "Anonymous cut" : entry.title,
-      artist: hide ? "Hidden until the week closes" : user?.displayName || "Unknown",
+      artist: hide ? "Hidden — revealed only if it wins" : user?.displayName || "Unknown",
       slug: entry.slug,
       keepPct: keepRate(entry),
       sample: scoutTotal(entry),

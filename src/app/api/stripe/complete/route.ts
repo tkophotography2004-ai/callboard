@@ -31,7 +31,7 @@ export async function GET(req: Request) {
           }
           if (entry.slug) success.searchParams.set("slug", entry.slug);
           if (entry.arena) success.searchParams.set("arena", entry.arena);
-          if (entry.title) success.searchParams.set("title", entry.title);
+          if (entry.title && entry.arena !== "blind") success.searchParams.set("title", entry.title);
         }
       });
     }
