@@ -72,8 +72,8 @@ export default function HowPage() {
             Blind — {submissionsAreFree() ? "free this week" : "$30"} · music only
           </h2>
           <p className="mt-3">
-            This is the talent test for music artists. Paste a YouTube, SoundCloud, Spotify, Audiomack, or TikTok link.
-            Your name, page, and following are stripped off until the week closes. The title stays; the artist does not.
+            This is the talent test for music artists. Upload an MP3, M4A, or WAV — no links. Your name, title, page,
+            and following stay hidden, and we strip the file&apos;s tags. Only the week&apos;s crowned winners are revealed.
             Nobody can campaign “vote for me.” They can only vote for the sound. One Blind entry per 24 hours.
           </p>
           <p className="mt-3">

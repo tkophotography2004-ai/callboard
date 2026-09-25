@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { remainingToday } from "@/lib/queries";
 import { freeWeekEndLabel, potCapLine, submissionsAreFree, namedPriceLine } from "@/lib/rules";
 import { stripeEnabled } from "@/lib/stripe";
+import { blobEnabled } from "@/lib/blindAudio";
 import { readStore } from "@/lib/store";
 
 export const metadata = { title: "Submit" };
@@ -15,7 +16,9 @@ export default async function EnterPage() {
       <div className="mx-auto max-w-lg px-4 py-16">
         <p className="eyebrow">Two ways in</p>
         <h1 className="display mt-3 text-5xl">Submit to the board</h1>
-        <p className="mt-4 text-mist">Paste a link. Strangers Keep or Pass. Clicks do not buy first place.</p>
+        <p className="mt-4 text-mist">
+          Blind: upload your track. Other lounges: paste a link. Strangers Keep or Pass. Clicks do not buy first place.
+        </p>
 
         <div className="mt-8 space-y-3">
           {submissionsAreFree() ? (
@@ -30,7 +33,7 @@ export default async function EnterPage() {
           <div className="border border-white/10 p-4">
             <p className="text-paper">{submissionsAreFree() ? "Blind — free this week" : "Blind — $30"}</p>
             <p className="mt-2 text-sm text-mist">
-              Music only · name hidden · YouTube, SoundCloud, Spotify, Audiomack, TikTok
+              Music only · audio upload (MP3, M4A, WAV) · name and title hidden · only winners revealed
             </p>
           </div>
           <div className="border border-white/10 p-4">
@@ -80,14 +83,14 @@ export default async function EnterPage() {
         {!store.chargesLive
           ? "The cash pot is off while the board fills. Submit free. Same Keep / Pass rules."
           : submissionsAreFree()
-            ? `Submissions are free through ${freeWeekEndLabel()} — platform make-good. Choose a lounge, paste your link, and go.`
-            : "Choose a lounge, paste your link, and go. Keep / Pass ranks the work — not clicks."}
+            ? `Submissions are free through ${freeWeekEndLabel()} — platform make-good. Choose a lounge and go: Blind takes an audio upload, the others take a link.`
+            : "Choose a lounge and go: Blind takes an audio upload, the others take a link. Keep / Pass ranks the work — not clicks."}
       </p>
 
       <div className="mt-6 space-y-3">
         <div className="border border-white/10 p-4 text-sm text-mist">
           <span className="text-paper">{submissionsAreFree() ? "Blind free" : "Blind $30"}</span> — music · one per
-          24h · YouTube, SoundCloud, Spotify, Audiomack, TikTok
+          24h · audio upload only (MP3, M4A, WAV) · only winners revealed
         </div>
         <div className="border border-white/10 p-4 text-sm text-mist">
           <span className="text-paper">
@@ -117,6 +120,7 @@ export default async function EnterPage() {
         stripeReady={stripeEnabled()}
         chargesLive={Boolean(store.chargesLive)}
         freePasses={user.freePasses || 0}
+        blobUploads={blobEnabled()}
       />
     </div>
   );
