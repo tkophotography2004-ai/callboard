@@ -161,7 +161,7 @@ export default async function HomePage() {
         <div className="gold-line mb-10" />
         <p className="eyebrow">The Cut</p>
         <h2 className="display mt-2 text-3xl">Blind this week</h2>
-        <p className="mt-2 text-sm text-mist">Music tracks only. Name locked until Sunday.</p>
+        <p className="mt-2 text-sm text-mist">Uploaded audio only. Names and titles locked — only winners are revealed.</p>
         <BoardList rows={data.blind.board} hideHeat />
         <Link href="/board/blind" className="btn-ghost mt-5">
           Full Blind board
@@ -220,7 +220,7 @@ export default async function HomePage() {
             <p className="text-copper-300">02</p>
             <h3 className="display mt-2 text-2xl">Blind locks the name</h3>
             <p className="mt-3 text-sm leading-relaxed text-mist">
-              Blind is $30 and music only. The artist is hidden until the week closes. You vote for the record.{" "}
+              Blind is $30 and music only. The artist and title stay hidden — only crowned winners are revealed. You vote for the record.{" "}
               {NOTHING_LIKE_THIS}
             </p>
           </div>
@@ -239,4 +239,3 @@ export default async function HomePage() {
     </>
   );
 }
-
