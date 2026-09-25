@@ -15,10 +15,15 @@ import { consumeFreePass, redeemPassCode } from "@/lib/promo";
 import { markEntryPaid, markFoundingEntry } from "@/lib/money";
 import { createEntryCheckout, stripeEnabled } from "@/lib/stripe";
 import { storeCoverArt } from "@/lib/media";
-import { updateStore } from "@/lib/store";
+import { BLIND_COVER, BLIND_NOTE, blindMediaRoute } from "@/lib/blind";
+import { deleteBlindAudio, finalizeBlindUpload, randomBlindSlug } from "@/lib/blindAudio";
+import type { BlindAudio } from "@/lib/types";
+import { readStore, updateStore } from "@/lib/store";
 import { isoWeekId } from "@/lib/week";
 
 export const runtime = "nodejs";
+/** Blind uploads are fetched, stripped, and re-stored here (up to 25 MB). */
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   if (PUBLIC_CLOSED) {
@@ -44,17 +49,41 @@ export async function POST(req: Request) {
   const sourceUrl = String(data.get("sourceUrl") || "").trim();
   const usePass = String(data.get("useFreePass") || "") === "1";
   const passCodeRaw = String(data.get("passCode") || "").trim();
-  const embed = await resolveAndParseEmbed(sourceUrl);
+  const isBlind = arena === "blind";
+  const blindTicket = String(data.get("blindUpload") || "").trim();
+  // Blind is audio-upload only: never resolve or store a platform link for it.
+  const embed = isBlind ? null : await resolveAndParseEmbed(sourceUrl);
 
   if (!title) return json({ error: "Add a title." }, 400);
   if (!genre) return json({ error: "Add a genre." }, 400);
   if (!logline) return json({ error: "Add a one-line pitch." }, 400);
   if (mediaFile) {
-    return json({ error: "Paste a link instead of uploading a file." }, 400);
+    return json(
+      { error: isBlind ? `Use the Blind uploader. ${BLIND_NOTE}` : "Paste a link instead of uploading a file." },
+      400,
+    );
   }
 
-  let coverPath = "/seed/hero.jpg";
-  if (coverFile) {
+  let blindAudio: BlindAudio | null = null;
+  if (isBlind) {
+    if (!blindTicket) {
+      return json({ error: `Upload your track as an MP3, M4A, or WAV file. ${BLIND_NOTE}` }, 400);
+    }
+    const pre = await readStore();
+    if (remainingToday(pre, user.id, arena) <= 0) {
+      return json({ error: "Blind is one entry per 24 hours. Come back tomorrow." }, 400);
+    }
+    try {
+      blindAudio = await finalizeBlindUpload(blindTicket);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not process that audio file.";
+      return json({ error: message }, 400);
+    }
+  }
+
+  let coverPath = isBlind ? BLIND_COVER : "/seed/hero.jpg";
+  // Blind ignores uploaded cover art (default Blind artwork only).
+  if (coverFile && !isBlind) {
     try {
       coverPath = await storeCoverArt(coverFile);
     } catch (err) {
@@ -63,7 +92,7 @@ export async function POST(req: Request) {
     }
   }
 
-  if (!embed) {
+  if (!embed && !isBlind) {
     const shortHint =
       /vm\.tiktok\.com|vt\.tiktok\.com|tiktok\.com\/t\//i.test(sourceUrl)
         ? " If this is a TikTok share link, open it in TikTok, tap Share ? Copy link, and paste the full link that has /video/ and numbers."
@@ -77,13 +106,15 @@ export async function POST(req: Request) {
       400,
     );
   }
-  if (!embedAllowed(embed, arena)) {
+  if (embed && !embedAllowed(embed, arena)) {
     return json({ error: `That site is not allowed in this lounge. ${linkHelp(arena)}` }, 400);
   }
 
   // Canonical URL so MediaPlayer parseEmbed works without re-resolving short links.
-  const mediaPath = playableMediaUrl(embed);
-  const bytes = 0;
+  const entryId = `e_${nanoid(10)}`;
+  const mediaPath = isBlind ? blindMediaRoute(entryId) : embed ? playableMediaUrl(embed) : null;
+  const bytes = blindAudio?.bytes || 0;
+  if (!mediaPath) return json({ error: linkHelp(arena) }, 400);
 
   const created = await updateStore((store) => {
     if (remainingToday(store, user.id, arena) <= 0) {
@@ -93,9 +124,12 @@ export async function POST(req: Request) {
           : `You already used ${PRICE[arena].maxPerDay} entries in this lounge in the last 24 hours.`,
       );
     }
-    const slug = uniqueSlug(title, new Set(store.entries.map((e) => e.slug)));
+    const taken = new Set(store.entries.map((e) => e.slug));
+    // Blind slugs are random so the URL never leaks the title.
+    const slug = isBlind ? randomBlindSlug(taken) : uniqueSlug(title, taken);
+    const clampedDuration = Math.max(0, Math.min(durationSeconds || 0, 60 * 60));
     const entry = {
-      id: `e_${nanoid(10)}`,
+      id: entryId,
       slug,
       userId: user.id,
       arena,
@@ -105,7 +139,7 @@ export async function POST(req: Request) {
       logline,
       coverPath,
       mediaPath,
-      durationSeconds: durationSeconds || (isAudioLounge(arena) ? 45 : 60),
+      durationSeconds: clampedDuration || (isAudioLounge(arena) ? 45 : 60),
       hookStartSeconds: 0,
       bytes,
       status: "draft" as const,
@@ -122,6 +156,7 @@ export async function POST(req: Request) {
       heatVotes: 0,
       playCount: 0,
       links: readArtistLinks(data),
+      ...(blindAudio ? { audio: blindAudio } : {}),
     };
     store.entries.push(entry);
     const owner = store.users.find((u) => u.id === user.id);
@@ -190,7 +225,10 @@ export async function POST(req: Request) {
     };
   }).catch((err: Error) => err);
 
-  if (created instanceof Error) return json({ error: created.message }, 400);
+  if (created instanceof Error) {
+    if (blindAudio) await deleteBlindAudio(blindAudio);
+    return json({ error: created.message }, 400);
+  }
 
   if (created.founding || created.pass || created.beta) {
     return json({
@@ -231,7 +269,7 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       arena,
-      title,
+      title: isBlind ? "Blind entry" : title,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Stripe checkout failed.";

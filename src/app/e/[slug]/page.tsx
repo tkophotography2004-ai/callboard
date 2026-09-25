@@ -4,7 +4,7 @@ import ArtistLinks from "@/components/ArtistLinks";
 import HeatButton from "@/components/HeatButton";
 import MediaPlayer from "@/components/MediaPlayer";
 import ShareBar from "@/components/ShareBar";
-import { APP_NAME_MARK, entryUrl } from "@/lib/config";
+import { APP_NAME_MARK, assetUrl, entryUrl } from "@/lib/config";
 import { formatDuration } from "@/lib/format";
 import { ARENA_LABEL, SCREEN_KIND_LABEL } from "@/lib/rules";
 import { toPublic } from "@/lib/queries";
@@ -15,14 +15,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const store = await readStore();
   const entry = store.entries.find((e) => e.slug === slug && e.status === "paid");
   if (!entry) return { title: "Entry" };
+  // toPublic masks unrevealed Blind entries: "Blind cut #N", default art, no artist.
   const pub = toPublic(store, entry);
+  const title = pub.hiddenArtist ? `${pub.title} — Blind Lounge` : `${pub.title} — ${pub.artist}`;
+  // Social crawlers cannot render SVG; hidden Blind cuts share the generic site art.
+  const image = pub.hiddenArtist ? assetUrl("/seed/hero.jpg") : pub.coverPath;
   return {
-    title: pub.hiddenArtist ? `${pub.title} — Blind cut` : `${pub.title} — ${pub.artist}`,
+    title,
     description: pub.logline,
+    ...(pub.hiddenArtist ? { referrer: "no-referrer" as const, robots: { index: false, follow: false } } : {}),
     openGraph: {
       title: `${pub.title} · ${APP_NAME_MARK}`,
       description: pub.logline,
-      images: [pub.coverPath],
+      images: [image],
+    },
+    twitter: {
+      card: "summary" as const,
+      title: `${pub.title} · ${APP_NAME_MARK}`,
+      description: pub.logline,
+      images: [image],
     },
   };
 }
@@ -42,7 +53,13 @@ export default async function EntryPage({ params }: { params: Promise<{ slug: st
         {pub.screenKind ? ` · ${SCREEN_KIND_LABEL[pub.screenKind]}` : ""} · {pub.genre}
       </p>
       <h1 className="display mt-3 text-4xl">{pub.title}</h1>
-      <p className="mt-1 text-mist">{pub.hiddenArtist ? "Artist locked until the week closes" : pub.artist}</p>
+      <p className="mt-1 text-mist">
+        {pub.anonymousForever
+          ? "Anonymous — only crowned winners are revealed"
+          : pub.hiddenArtist
+            ? "Artist locked — revealed only if it wins"
+            : pub.artist}
+      </p>
       <p className="mt-4 text-paper/80">{pub.logline}</p>
 
       <div className="relative mt-6 overflow-hidden border border-white/10">

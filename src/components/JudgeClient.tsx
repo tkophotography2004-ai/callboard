@@ -82,7 +82,7 @@ export default function JudgeClient({ arena, signedIn = false }: { arena: Arena;
       </div>
       <p className="mt-3 text-sm text-mist">
         {arena === "blind"
-          ? "Music only. The artist stays hidden until the week closes. Keep means you would leave it on. Pass means skip."
+          ? "Music only. The artist stays hidden — only crowned winners are revealed. Keep means you would leave it on. Pass means skip."
           : "Name is hidden while you listen. Keep or Pass is the only score that pays — not plays, not shares."}{" "}
         {signedIn
           ? "This vote counts toward the fan pot."

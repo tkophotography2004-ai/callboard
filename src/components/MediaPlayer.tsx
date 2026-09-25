@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isBlindMediaRoute } from "@/lib/blind";
 import { isAudioEmbed, parseEmbed, type ParsedEmbed } from "@/lib/embed";
 import { formatDuration } from "@/lib/format";
 import { HOOK_SECONDS, type Arena } from "@/lib/rules";
@@ -49,8 +50,10 @@ export default function MediaPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
-  const embed = parseEmbed(mediaPath);
-  const video = isVideoPath(mediaPath);
+  // Blind lounge: our own audio player only. Never a platform embed, never an outbound link.
+  const blindLounge = arena === "blind";
+  const embed = blindLounge ? null : parseEmbed(mediaPath);
+  const video = blindLounge ? false : isVideoPath(mediaPath);
   const cap = Math.min(
     durationSeconds || HOOK_SECONDS,
     arena === "film" || arena === "video" || arena === "creator" ? 120 : HOOK_SECONDS,
@@ -97,6 +100,19 @@ export default function MediaPlayer({
 
   const shown = Math.max(0, t - hookStartSeconds);
   const pct = cap ? Math.min(100, (shown / cap) * 100) : 0;
+
+  if (blindLounge && !isBlindMediaRoute(mediaPath)) {
+    return (
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink-900 sm:aspect-video">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={coverPath} alt="" className="h-full w-full object-cover opacity-60" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-ink-950/70 p-6 text-center">
+          <p className="eyebrow">Blind cut</p>
+          <p className="text-sm text-mist">This cut is not playable here. Blind plays uploaded audio only.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (embed) {
     const tall = embed.kind === "tiktok" || embed.kind === "instagram";
@@ -193,7 +209,21 @@ export default function MediaPlayer({
           <img src={coverPath} alt="" className={`h-full w-full object-cover ${playing ? "kenburns" : ""}`} />
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-ink-950/20" />
           {mediaPath && (
-            <audio ref={audioRef} src={mediaPath} onTimeUpdate={(e) => onTime(e.currentTarget.currentTime)} />
+            <audio
+              ref={audioRef}
+              src={mediaPath}
+              preload={blindLounge ? "metadata" : undefined}
+              controlsList="nodownload noplaybackrate"
+              onContextMenu={(e) => e.preventDefault()}
+              onTimeUpdate={(e) => onTime(e.currentTarget.currentTime)}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+            />
+          )}
+          {blindLounge && (
+            <p className="absolute left-3 top-3 rounded-full bg-ink-950/80 px-3 py-1.5 text-[11px] uppercase tracking-[0.16em] text-paper/70">
+              Blind cut · plays here
+            </p>
           )}
         </div>
       )}

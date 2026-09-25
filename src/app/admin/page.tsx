@@ -4,6 +4,7 @@ import { formatUsd, ARENA_LABEL, ARENAS, FOUNDING_PASS_LIMIT } from "@/lib/rules
 import { currentWeeks, readStore } from "@/lib/store";
 import { isoWeekId, previousWeekId, weekLabel } from "@/lib/week";
 import { collectCrateWinners } from "@/lib/crate";
+import { legacyBlindLinkEntries } from "@/lib/queries";
 import AdminCharges from "./charges";
 import AdminCrate from "./crate";
 import AdminPayouts from "./ui";
@@ -28,6 +29,7 @@ export default async function AdminPage() {
     };
   });
   const fanPrev = store.fanWeeks.find((w) => w.weekId === prevWeekId);
+  const legacyBlind = legacyBlindLinkEntries(store);
   const artists = store.users.length;
   const paid = store.entries.filter((e) => e.status === "paid").length;
   const foundingPasses = [...(store.foundingPasses || [])].sort(
@@ -212,6 +214,29 @@ export default async function AdminPage() {
             );
           })}
       </ul>
+
+      <h2 className="display mt-12 text-3xl">Legacy Blind link entries</h2>
+      <p className="mt-2 text-sm text-mist">
+        Blind is audio-upload only now. These older Blind entries were submitted as platform links. They are kept (not
+        deleted) but hidden from Blind playback and judging.
+      </p>
+      {legacyBlind.length === 0 ? (
+        <p className="mt-4 text-sm text-mist">None.</p>
+      ) : (
+        <ul className="mt-4 divide-y divide-white/10 border border-white/10 text-sm">
+          {legacyBlind.map((e) => {
+            const u = store.users.find((x) => x.id === e.userId);
+            return (
+              <li key={e.id} className="flex flex-wrap justify-between gap-2 p-3">
+                <span>
+                  {e.id} · {e.title} · {u?.displayName} · {e.weekId} · {e.status}
+                </span>
+                <span className="break-all text-mist">{e.mediaPath}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

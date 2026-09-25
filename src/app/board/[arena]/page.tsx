@@ -51,7 +51,7 @@ export default async function BoardPage({ params }: { params: Promise<{ arena: s
       </div>
       <p className="mt-4 max-w-xl text-mist">
         {arena === "blind"
-          ? "Music tracks only. Artist names are locked until Sunday. Ranked only by Keep / Pass. One entry per 24 hours. Clicks cannot touch this pot."
+          ? "Uploaded audio only — no links, no names, no titles. Only the week's crowned winners are revealed; everyone else stays anonymous. Ranked only by Keep / Pass. One entry per 24 hours. Clicks cannot touch this pot."
           : arena === "creator"
             ? "For people who already pay to promote on social. Paste a YouTube, TikTok, Instagram, or Vimeo link. Keep / Pass ranks it. Share count is shown. It does not buy rank."
             : "Ranked by Keep / Pass after a stranger actually plays it. Film and music videos can be a linked YouTube, TikTok, Instagram, or Vimeo. Share count is shown. It does not buy rank."}{" "}
